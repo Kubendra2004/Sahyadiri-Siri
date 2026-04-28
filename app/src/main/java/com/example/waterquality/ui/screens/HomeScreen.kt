@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
@@ -26,8 +27,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.waterquality.data.model.WaterReport
-import com.example.waterquality.ui.components.WaterQuality
-import com.example.waterquality.ui.components.waterQualityFromReport
+import com.example.waterquality.ui.components.*
 import com.example.waterquality.ui.theme.*
 import com.example.waterquality.ui.utils.*
 import com.example.waterquality.ui.viewmodel.WaterViewModel
@@ -35,6 +35,7 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import android.content.Intent
 import java.util.Calendar
 
 @Composable
@@ -45,8 +46,12 @@ fun HomeScreen(
     onMapClick: () -> Unit = {},
     onAdvisoriesClick: () -> Unit = {}
 ) {
-    val lang    = LocalAppLanguage.current
-    val reports by viewModel.reports.collectAsStateWithLifecycle()
+    val lang       = LocalAppLanguage.current
+    val reports    by viewModel.reports.collectAsStateWithLifecycle()
+    val isLoading  by viewModel.isLoading.collectAsStateWithLifecycle()
+    val isOnline   by viewModel.isOnline.collectAsStateWithLifecycle()
+    val regionName by viewModel.regionName.collectAsStateWithLifecycle()
+    val wqiTrend   by viewModel.wqiTrend.collectAsStateWithLifecycle()
 
     val cleanCount    = reports.count { waterQualityFromReport(it.clarity, it.smell) == WaterQuality.CLEAN }
     val moderateCount = reports.count { waterQualityFromReport(it.clarity, it.smell) == WaterQuality.MODERATE }
@@ -59,140 +64,183 @@ fun HomeScreen(
         }
     }.average().toFloat().coerceIn(0f, 100f)
 
-    LazyColumn(
-        modifier       = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(bottom = 32.dp)
+    @OptIn(ExperimentalMaterial3Api::class)
+    PullToRefreshBox(
+        isRefreshing = isLoading,
+        onRefresh    = { viewModel.refresh() },
+        modifier     = Modifier.fillMaxSize()
     ) {
-        // ── Header ────────────────────────────────────────────────────────────
-        item {
-            Box(
-                modifier = Modifier.fillMaxWidth()
-                    .background(Brush.verticalGradient(GradientOceanColors))
-                    .statusBarsPadding()
-                    .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 80.dp)
-            ) {
-                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                    Column {
-                        Text(greetingFor(lang), style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold, color = Color.White)
-                        Text(appStr(lang, "home_subtitle"), style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(.7f))
-                    }
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Default.Notifications, null, tint = Color.White,
-                            modifier = Modifier.size(26.dp))
-                    }
-                }
-            }
-        }
-
-        // ── WQI Hero card (overlaps header) ──────────────────────────────────
-        item {
-            Box(Modifier.fillMaxWidth().offset(y = (-64).dp).padding(horizontal = 16.dp)) {
-                WqiHeroCard(avgScore, cleanCount, moderateCount, pollutedCount, lang)
-            }
-            Spacer(Modifier.height((-48).dp))
-        }
-
-        // ── AI Insights card ──────────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(12.dp))
-            AiInsightsCard(avgScore, reports.size, cleanCount, pollutedCount, lang,
-                modifier = Modifier.padding(horizontal = 16.dp))
-        }
-
-        // ── Water quality distribution chart ──────────────────────────────────
-        item {
-            Spacer(Modifier.height(16.dp))
-            SectionHeader(appStr(lang, "home_wqi") + " Distribution", lang)
-            Spacer(Modifier.height(10.dp))
-            WaterQualityChart(cleanCount, moderateCount, pollutedCount,
-                modifier = Modifier.padding(horizontal = 16.dp))
-        }
-
-        // ── Mini map ──────────────────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(16.dp))
-            SectionHeader(appStr(lang, "home_region"), lang)
-            Spacer(Modifier.height(10.dp))
-            MiniMapCard(onMapClick = onMapClick,
-                modifier = Modifier.padding(horizontal = 16.dp))
-        }
-
-        // ── Quick Actions (Report + Advisories only) ──────────────────────────
-        item {
-            Spacer(Modifier.height(16.dp))
-            SectionHeader(appStr(lang, "home_actions"), lang)
-            Spacer(Modifier.height(10.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                QuickCard(Modifier.weight(1f), Icons.Default.Add,
-                    appStr(lang, "home_new_report"),
-                    listOf(Color(0xFF023E8A), Color(0xFF0096C7)), onAddReportClick)
-                QuickCard(Modifier.weight(1f), Icons.Default.AutoAwesome,
-                    appStr(lang, "home_advisories"),
-                    listOf(Color(0xFF6A0572), Color(0xFFB5179E)), onAdvisoriesClick)
-            }
-        }
-
-        // ── Recent reports ────────────────────────────────────────────────────
-        item {
-            Spacer(Modifier.height(16.dp))
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                Arrangement.SpaceBetween, Alignment.CenterVertically
-            ) {
-                SectionHeader(appStr(lang, "home_recent"), lang)
-                if (reports.isNotEmpty())
-                    Text(appStr(lang, "home_see_all"),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable(onClick = onMapClick))
-            }
-            Spacer(Modifier.height(8.dp))
-        }
-
-        if (reports.isEmpty()) {
+        LazyColumn(
+            modifier       = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(bottom = 32.dp)
+        ) {
+            // Header
             item {
-                Column(Modifier.fillMaxWidth().padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.WaterDrop, null, tint = CleanBlue.copy(.4f),
-                        modifier = Modifier.size(56.dp))
-                    Spacer(Modifier.height(12.dp))
-                    Text(appStr(lang, "home_empty"), style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                    Spacer(Modifier.height(6.dp))
-                    Text(appStr(lang, "home_empty_sub"), style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center)
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = onAddReportClick, shape = RoundedCornerShape(14.dp)) {
-                        Icon(Icons.Default.Add, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(appStr(lang, "home_new_report"))
+                Box(Modifier.fillMaxWidth().height(170.dp)
+                    .background(Brush.verticalGradient(GradientOceanColors))) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 56.dp),
+                        Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                        Column {
+                            Text(greetingFor(lang), style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(appStr(lang, "home_subtitle"), style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(.7f))
+                        }
+                        IconButton(onClick = {}) {
+                            Icon(Icons.Default.Notifications, null, tint = Color.White,
+                                modifier = Modifier.size(26.dp))
+                        }
                     }
                 }
             }
-        } else {
-            itemsIndexed(reports.take(5), key = { _, r -> r.id }) { index, report ->
-                var vis by remember { mutableStateOf(false) }
-                val alpha by animateFloatAsState(if (vis) 1f else 0f,
-                    tween(300, index * 70), label = "a$index")
-                val ty by animateFloatAsState(if (vis) 0f else 40f,
-                    spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium), label = "t$index")
-                LaunchedEffect(Unit) { vis = true }
-                Box(Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
-                    .graphicsLayer { this.alpha = alpha; translationY = ty }) {
-                    ReportCard(report, lang) { onReportClick(report.id) }
+
+            // Offline banner
+            item {
+                if (!isOnline) {
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .background(Color(0xFFFF6B6B))
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.WifiOff, null,
+                            modifier = Modifier.size(18.dp), tint = Color.White)
+                        Spacer(Modifier.width(8.dp))
+                        Text("You're offline - showing cached data",
+                            style = MaterialTheme.typography.labelMedium, color = Color.White,
+                            modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+
+            // WQI Hero card
+            item {
+                Box(Modifier.fillMaxWidth().offset(y = (-64).dp).padding(horizontal = 16.dp)) {
+                    WqiHeroCard(avgScore, cleanCount, moderateCount, pollutedCount, lang)
+                }
+                Spacer(Modifier.height((-48).dp))
+            }
+
+            // Sparkline trend
+            item {
+                Spacer(Modifier.height(4.dp))
+                Card(Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp), elevation = CardDefaults.cardElevation(4.dp)) {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                            Text("7-Day WQI Trend",
+                                style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text("${avgScore.toInt()}/100",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        SparklineChart(points = wqiTrend,
+                            lineColor = when {
+                                avgScore >= 70f -> CleanBlue
+                                avgScore >= 35f -> ModerateAmber
+                                else -> PollutedRed
+                            })
+                        Spacer(Modifier.height(4.dp))
+                        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+                            Text("7d ago", style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Today", style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+
+            // AI Insights card
+            item {
+                Spacer(Modifier.height(12.dp))
+                AiInsightsCard(avgScore, reports.size, cleanCount, pollutedCount, lang, regionName,
+                    modifier = Modifier.padding(horizontal = 16.dp))
+            }
+
+            // Water quality distribution chart
+            item {
+                Spacer(Modifier.height(16.dp))
+                SectionHeader(appStr(lang, "home_wqi") + " Distribution", lang)
+                Spacer(Modifier.height(10.dp))
+                WaterQualityChart(cleanCount, moderateCount, pollutedCount,
+                    modifier = Modifier.padding(horizontal = 16.dp))
+            }
+
+            // Mini map
+            item {
+                Spacer(Modifier.height(16.dp))
+                SectionHeader(appStr(lang, "home_region"), lang)
+                Spacer(Modifier.height(10.dp))
+                MiniMapCard(onMapClick = onMapClick,
+                    modifier = Modifier.padding(horizontal = 16.dp))
+            }
+
+            // Quick Actions
+            item {
+                Spacer(Modifier.height(16.dp))
+                SectionHeader(appStr(lang, "home_actions"), lang)
+                Spacer(Modifier.height(10.dp))
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    QuickCard(Modifier.weight(1f), Icons.Default.Add,
+                        appStr(lang, "home_new_report"),
+                        listOf(Color(0xFF023E8A), Color(0xFF0096C7)), onAddReportClick)
+                    QuickCard(Modifier.weight(1f), Icons.Default.AutoAwesome,
+                        appStr(lang, "home_advisories"),
+                        listOf(Color(0xFF6A0572), Color(0xFFB5179E)), onAdvisoriesClick)
+                }
+            }
+
+            // Recent reports
+            item {
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                    SectionHeader(appStr(lang, "home_recent"), lang)
+                    if (reports.isNotEmpty())
+                        Text(appStr(lang, "home_see_all"),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable(onClick = onMapClick))
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+
+            if (reports.isEmpty()) {
+                item {
+                    Column(Modifier.fillMaxWidth().padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.WaterDrop, null, tint = CleanBlue.copy(.4f),
+                            modifier = Modifier.size(56.dp))
+                        Spacer(Modifier.height(12.dp))
+                        Text(appStr(lang, "home_empty"), style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                        Spacer(Modifier.height(6.dp))
+                        Text(appStr(lang, "home_empty_sub"), style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                    }
+                }
+            } else {
+                itemsIndexed(reports.take(5)) { index, report ->
+                    var vis by remember { mutableStateOf(false) }
+                    val alpha by animateFloatAsState(if (vis) 1f else 0f,
+                        tween(400, delayMillis = index * 80), label = "a$index")
+                    val ty by animateFloatAsState(if (vis) 0f else 40f,
+                        spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium), label = "t$index")
+                    LaunchedEffect(Unit) { vis = true }
+                    Box(Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
+                        .graphicsLayer { this.alpha = alpha; translationY = ty }) {
+                        ReportCard(report, lang) { onReportClick(report.id) }
+                    }
                 }
             }
         }
-    }
+    } // end PullToRefreshBox
 }
 
-// ── WQI Hero Card ─────────────────────────────────────────────────────────────
+// â”€â”€ WQI Hero Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun WqiHeroCard(
     score: Float, clean: Int, moderate: Int, polluted: Int, lang: String
@@ -239,9 +287,9 @@ private fun WqiHeroCard(
                     }
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        MiniStatPill("✅ $clean", Color.White)
-                        MiniStatPill("⚠️ $moderate", Color.White)
-                        MiniStatPill("🚨 $polluted", Color.White)
+                        MiniStatPill("âœ… $clean", Color.White)
+                        MiniStatPill("âš ï¸ $moderate", Color.White)
+                        MiniStatPill("ðŸš¨ $polluted", Color.White)
                     }
                 }
             }
@@ -258,29 +306,29 @@ private fun WqiHeroCard(
     }
 }
 
-// ── AI Insights Card ─────────────────────────────────────────────────────────
+// â”€â”€ AI Insights Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
-private fun AiInsightsCard(score: Float, total: Int, clean: Int, polluted: Int, lang: String, modifier: Modifier) {
+private fun AiInsightsCard(score: Float, total: Int, clean: Int, polluted: Int, lang: String, regionName: String, modifier: Modifier) {
     val quality = when { score >= 70 -> WaterQuality.CLEAN; score >= 35 -> WaterQuality.MODERATE; else -> WaterQuality.POLLUTED }
 
     // Bilingual insights
-    val insight = if (lang == "ಕನ್ನಡ") {
+    val insight = if (lang == "à²•à²¨à³à²¨à²¡") {
         when (quality) {
-            WaterQuality.CLEAN    -> "✅ ಬೆಂಗಳೂರು ಪ್ರದೇಶದಲ್ಲಿ ನೀರಿನ ಗುಣಮಟ್ಟ ಪ್ರಸ್ತುತ ಉತ್ತಮ ಸ್ಥಿತಿಯಲ್ಲಿದೆ. $total ಸಮುದಾಯ ವರದಿಗಳಲ್ಲಿ $clean ಶುದ್ಧ ನೀರನ್ನು ತೋರಿಸುತ್ತವೆ. ನಿಯಮಿತ ಮೇಲ್ವಿಚಾರಣೆ ಮುಂದುವರಿಸಿ."
-            WaterQuality.MODERATE -> "⚠️ ಬೆಂಗಳೂರು ಪ್ರದೇಶದಲ್ಲಿ ನೀರಿನ ಗುಣಮಟ್ಟ ಮಧ್ಯಮ ಮಟ್ಟದ ಸ್ಥಿತಿ ತೋರಿಸುತ್ತಿದೆ. ಕೆಲವು ಮೂಲಗಳಿಗೆ ಬಳಕೆಗೆ ಮುನ್ನ ಶುದ್ಧೀಕರಣ ಅಗತ್ಯ. ಸಮುದಾಯ ಜಾಗರೂಕತೆ ಸೂಚಿಸಲಾಗಿದೆ."
-            WaterQuality.POLLUTED -> "🚨 $polluted ವರದಿಗಳು ಕಲುಷಿತ ನೀರಿನ ಮೂಲಗಳನ್ನು ಸೂಚಿಸುತ್ತವೆ. ನೇರ ಸಂಪರ್ಕವನ್ನು ತಪ್ಪಿಸಿ. ಸ್ಥಳೀಯ ಅಧಿಕಾರಿಗಳಿಗೆ ತಕ್ಷಣ ತಿಳಿಸಿ."
+            WaterQuality.CLEAN    -> "âœ… à²¬à³†à²‚à²—à²³à³‚à²°à³ à²ªà³à²°à²¦à³‡à²¶à²¦à²²à³à²²à²¿ à²¨à³€à²°à²¿à²¨ à²—à³à²£à²®à²Ÿà³à²Ÿ à²ªà³à²°à²¸à³à²¤à³à²¤ à²‰à²¤à³à²¤à²® à²¸à³à²¥à²¿à²¤à²¿à²¯à²²à³à²²à²¿à²¦à³†. $total à²¸à²®à³à²¦à²¾à²¯ à²µà²°à²¦à²¿à²—à²³à²²à³à²²à²¿ $clean à²¶à³à²¦à³à²§ à²¨à³€à²°à²¨à³à²¨à³ à²¤à³‹à²°à²¿à²¸à³à²¤à³à²¤à²µà³†. à²¨à²¿à²¯à²®à²¿à²¤ à²®à³‡à²²à³à²µà²¿à²šà²¾à²°à²£à³† à²®à³à²‚à²¦à³à²µà²°à²¿à²¸à²¿."
+            WaterQuality.MODERATE -> "âš ï¸ à²¬à³†à²‚à²—à²³à³‚à²°à³ à²ªà³à²°à²¦à³‡à²¶à²¦à²²à³à²²à²¿ à²¨à³€à²°à²¿à²¨ à²—à³à²£à²®à²Ÿà³à²Ÿ à²®à²§à³à²¯à²® à²®à²Ÿà³à²Ÿà²¦ à²¸à³à²¥à²¿à²¤à²¿ à²¤à³‹à²°à²¿à²¸à³à²¤à³à²¤à²¿à²¦à³†. à²•à³†à²²à²µà³ à²®à³‚à²²à²—à²³à²¿à²—à³† à²¬à²³à²•à³†à²—à³† à²®à³à²¨à³à²¨ à²¶à³à²¦à³à²§à³€à²•à²°à²£ à²…à²—à²¤à³à²¯. à²¸à²®à³à²¦à²¾à²¯ à²œà²¾à²—à²°à³‚à²•à²¤à³† à²¸à³‚à²šà²¿à²¸à²²à²¾à²—à²¿à²¦à³†."
+            WaterQuality.POLLUTED -> "ðŸš¨ $polluted à²µà²°à²¦à²¿à²—à²³à³ à²•à²²à³à²·à²¿à²¤ à²¨à³€à²°à²¿à²¨ à²®à³‚à²²à²—à²³à²¨à³à²¨à³ à²¸à³‚à²šà²¿à²¸à³à²¤à³à²¤à²µà³†. à²¨à³‡à²° à²¸à²‚à²ªà²°à³à²•à²µà²¨à³à²¨à³ à²¤à²ªà³à²ªà²¿à²¸à²¿. à²¸à³à²¥à²³à³€à²¯ à²…à²§à²¿à²•à²¾à²°à²¿à²—à²³à²¿à²—à³† à²¤à²•à³à²·à²£ à²¤à²¿à²³à²¿à²¸à²¿."
         }
     } else {
         when (quality) {
-            WaterQuality.CLEAN    -> "✅ Water quality in the Bengaluru region is currently in good condition. Out of $total community reports, $clean show clean water sources. Continue routine monitoring and report any sudden changes promptly to keep the community safe."
-            WaterQuality.MODERATE -> "⚠️ Water quality shows moderate conditions across the Bengaluru region. Some water sources may require treatment before use. Community vigilance, regular testing, and boiling water before consumption is strongly advised."
-            WaterQuality.POLLUTED -> "🚨 $polluted of $total reports indicate contaminated water sources in this region. Avoid direct contact with affected water bodies. Alert local municipal authorities and health departments immediately."
+            WaterQuality.CLEAN    -> "âœ… Water quality in the Bengaluru region is currently in good condition. Out of $total community reports, $clean show clean water sources. Continue routine monitoring and report any sudden changes promptly to keep the community safe."
+            WaterQuality.MODERATE -> "âš ï¸ Water quality shows moderate conditions across the Bengaluru region. Some water sources may require treatment before use. Community vigilance, regular testing, and boiling water before consumption is strongly advised."
+            WaterQuality.POLLUTED -> "ðŸš¨ $polluted of $total reports indicate contaminated water sources in this region. Avoid direct contact with affected water bodies. Alert local municipal authorities and health departments immediately."
         }
     }
 
-    val regionLabel = if (lang == "ಕನ್ನಡ") "ಬೆಂಗಳೂರು ಪ್ರದೇಶ" else "Bengaluru Region"
-    val updatedLabel = if (lang == "ಕನ್ನಡ") "$total ವರದಿಗಳ ಆಧಾರದ ಮೇಲೆ · ಈಗಷ್ಟೇ ನವೀಕರಿಸಲಾಗಿದೆ" else "Based on $total community reports · Updated just now"
-    val geminiLabel = if (lang == "ಕನ್ನಡ") "Gemini AI ಒಳನೋಟಗಳು" else "Gemini AI Insights"
+    val regionLabel = regionName
+    val updatedLabel = if (lang == "à²•à²¨à³à²¨à²¡") "$total à²µà²°à²¦à²¿à²—à²³ à²†à²§à²¾à²°à²¦ à²®à³‡à²²à³† Â· à²ˆà²—à²·à³à²Ÿà³‡ à²¨à²µà³€à²•à²°à²¿à²¸à²²à²¾à²—à²¿à²¦à³†" else "Based on $total community reports Â· Updated just now"
+    val geminiLabel = if (lang == "à²•à²¨à³à²¨à²¡") "Gemini AI à²’à²³à²¨à³‹à²Ÿà²—à²³à³" else "Gemini AI Insights"
 
     // Pulsing LIVE dot
     val pulse = rememberInfiniteTransition(label = "pulse")
@@ -355,7 +403,7 @@ private fun AiInsightsCard(score: Float, total: Int, clean: Int, polluted: Int, 
 }
 
 
-// ── Water Quality Distribution Chart ─────────────────────────────────────────
+// â”€â”€ Water Quality Distribution Chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun WaterQualityChart(clean: Int, moderate: Int, polluted: Int, modifier: Modifier) {
     val total = (clean + moderate + polluted).coerceAtLeast(1)
@@ -402,7 +450,7 @@ private fun WaterQualityChart(clean: Int, moderate: Int, polluted: Int, modifier
     }
 }
 
-// ── Mini Map Preview ──────────────────────────────────────────────────────────
+// â”€â”€ Mini Map Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun MiniMapCard(onMapClick: () -> Unit, modifier: Modifier) {
     Card(modifier.clickable(onClick = onMapClick),
@@ -449,7 +497,7 @@ private fun MiniMapCard(onMapClick: () -> Unit, modifier: Modifier) {
     }
 }
 
-// ── Quick Action Card ─────────────────────────────────────────────────────────
+// â”€â”€ Quick Action Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun QuickCard(modifier: Modifier, icon: androidx.compose.ui.graphics.vector.ImageVector,
                       label: String, gradient: List<Color>, onClick: () -> Unit) {
@@ -470,7 +518,7 @@ private fun QuickCard(modifier: Modifier, icon: androidx.compose.ui.graphics.vec
     }
 }
 
-// ── Report Card ───────────────────────────────────────────────────────────────
+// â”€â”€ Report Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun ReportCard(report: WaterReport, lang: String, onClick: () -> Unit) {
     val q = waterQualityFromReport(report.clarity, report.smell)
@@ -480,10 +528,11 @@ private fun ReportCard(report: WaterReport, lang: String, onClick: () -> Unit) {
         WaterQuality.POLLUTED -> PollutedRed to PollutedRed.copy(.07f)
     }
     val score = when (q) {
-        WaterQuality.CLEAN -> 70f + report.clarity * 6f
+        WaterQuality.CLEAN    -> 70f + report.clarity * 6f
         WaterQuality.MODERATE -> 35f + report.clarity * 5f
         WaterQuality.POLLUTED -> report.clarity * 6f
     }
+    val context = LocalContext.current
     Card(Modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = bg),
@@ -495,14 +544,14 @@ private fun ReportCard(report: WaterReport, lang: String, onClick: () -> Unit) {
             }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
-                Text("%.4f°N, %.4f°E".format(report.latitude, report.longitude),
+                Text("%.4fÂ°N, %.4fÂ°E".format(report.latitude, report.longitude),
                     style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(3.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("${appStr(lang,"clarity")}: ${report.clarity}/5",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("•", style = MaterialTheme.typography.bodySmall,
+                    Text("â€¢", style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(report.flow, style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -511,12 +560,23 @@ private fun ReportCard(report: WaterReport, lang: String, onClick: () -> Unit) {
                 Text(timeAgo(report.timestamp), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(.6f))
             }
+            // Share button
+            IconButton(onClick = {
+                val qLabel = when (q) { WaterQuality.CLEAN -> "Clean"; WaterQuality.MODERATE -> "Moderate"; WaterQuality.POLLUTED -> "Polluted" }
+                val text = "Sahyadri-Siri Water Report\nLocation: %.4fÂ°N, %.4fÂ°E\nQuality: $qLabel (WQI: ${score.toInt()}/100)\nClarity: ${report.clarity}/5\nShared via Sahyadri-Siri App".format(report.latitude, report.longitude)
+                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text)
+                }, "Share Water Report"))
+            }) {
+                Icon(Icons.Default.Share, null, modifier = Modifier.size(18.dp), tint = accent.copy(.7f))
+            }
             Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(18.dp), tint = accent.copy(.5f))
         }
     }
 }
 
-// ── Section Header ────────────────────────────────────────────────────────────
+
+// â”€â”€ Section Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun SectionHeader(title: String, lang: String) {
     Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -527,7 +587,7 @@ private fun SectionHeader(title: String, lang: String) {
     }
 }
 
-// ── Greeting ──────────────────────────────────────────────────────────────────
+// â”€â”€ Greeting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 private fun greetingFor(lang: String): String {
     val h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     return appStr(lang, when { h < 12 -> "greet_morning"; h < 17 -> "greet_afternoon"; h < 21 -> "greet_evening"; else -> "greet_night" })

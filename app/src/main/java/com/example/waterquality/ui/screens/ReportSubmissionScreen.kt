@@ -66,6 +66,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import com.example.waterquality.ui.components.ConfettiCanvas
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -110,12 +112,14 @@ fun ReportSubmissionScreen(
     val snackbarState = remember { SnackbarHostState() }
 
     var showCamera by remember { mutableStateOf(false) }
+    var showConfetti by remember { mutableStateOf(false) }
 
-    // Auto-navigate on success
+    // Auto-navigate on success with confetti
     LaunchedEffect(uiState.submissionSuccess) {
         if (uiState.submissionSuccess) {
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            Toast.makeText(context, "✅ Report submitted successfully!", Toast.LENGTH_LONG).show()
+            showConfetti = true
+            kotlinx.coroutines.delay(2600)
             viewModel.resetSuccess()
             onNavigateBack()
         }
@@ -141,6 +145,7 @@ fun ReportSubmissionScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -228,8 +233,24 @@ fun ReportSubmissionScreen(
             hostState = snackbarState,
             modifier  = Modifier.align(Alignment.BottomCenter).navigationBarsPadding()
         )
+
+        // Confetti burst on success
+        if (showConfetti) {
+            Box(Modifier.fillMaxSize()) {
+                ConfettiCanvas(onFinished = { showConfetti = false })
+                Column(Modifier.fillMaxSize(), Arrangement.Center, Alignment.CenterHorizontally) {
+                    Text("✅", style = MaterialTheme.typography.displayLarge)
+                    Spacer(Modifier.height(12.dp))
+                    Text("Report Submitted!", style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                    Text("Thank you for contributing", style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
     }
 }
+
 
 // ─── Step Indicator ───────────────────────────────────────────────────────────
 @Composable

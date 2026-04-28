@@ -23,6 +23,8 @@ import com.example.waterquality.navigation.BottomNavTab
 import com.example.waterquality.navigation.Routes
 import com.example.waterquality.ui.components.AnimatedBottomBar
 import com.example.waterquality.ui.viewmodel.ProfileViewModel
+import com.example.waterquality.ui.viewmodel.WaterViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun MainScaffold(
@@ -33,6 +35,8 @@ fun MainScaffold(
     val navBackStack   by navController.currentBackStackEntryAsState()
     val currentRoute   = navBackStack?.destination?.route ?: Routes.HOME
     val bottomBarVisible = BottomNavTab.values().any { it.route == currentRoute }
+    val waterViewModel: WaterViewModel = hiltViewModel()
+    val alertBadge by waterViewModel.alertBadgeCount.collectAsStateWithLifecycle()
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -49,8 +53,9 @@ fun MainScaffold(
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
                 AnimatedBottomBar(
-                    currentRoute  = currentRoute,
-                    onTabSelected = { tab ->
+                    currentRoute    = currentRoute,
+                    alertBadgeCount = alertBadge,
+                    onTabSelected   = { tab ->
                         navController.navigate(tab.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true

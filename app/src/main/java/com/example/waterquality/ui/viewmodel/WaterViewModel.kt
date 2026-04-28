@@ -1,5 +1,6 @@
 package com.example.waterquality.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.waterquality.data.model.Advisory
@@ -7,15 +8,12 @@ import com.example.waterquality.data.model.WaterReport
 import com.example.waterquality.data.repository.WaterRepository
 import com.example.waterquality.ui.components.WaterQuality
 import com.example.waterquality.ui.components.waterQualityFromReport
+import com.example.waterquality.ui.utils.ConnectivityObserver
+import com.example.waterquality.ui.utils.resolveRegionName
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class HomeStats(
@@ -39,12 +37,42 @@ enum class AlertSeverity { CRITICAL, WARNING, INFO }
 
 @HiltViewModel
 class WaterViewModel @Inject constructor(
-    private val repository: WaterRepository
+    private val repository: WaterRepository,
+    private val connectivityObserver: ConnectivityObserver,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     // ─── Raw reports from Room ───────────────────────────────────────────────
     val reports: StateFlow<List<WaterReport>> = repository.allReports
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    // ─── Connectivity ────────────────────────────────────────────────────────
+    val isOnline: StateFlow<Boolean> = connectivityObserver.isOnline
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    // ─── Region name (GPS geocoder) ──────────────────────────────────────────
+    private val _regionName = MutableStateFlow("Bengaluru Region")
+    val regionName: StateFlow<String> = _regionName.asStateFlow()
+
+    // ─── Gemini AI insight ───────────────────────────────────────────────────
+    private val _geminiInsight = MutableStateFlow<String?>(null)
+    val geminiInsight: StateFlow<String?> = _geminiInsight.asStateFlow()
+
+    // ─── Alert badge count (unread non-clean reports) ────────────────────────
+    val alertBadgeCount: StateFlow<Int> = reports.map { list ->
+        list.count { waterQualityFromReport(it.clarity, it.smell) != WaterQuality.CLEAN }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    // ─── WQI trend (last 7 scores for sparkline) ─────────────────────────────
+    val wqiTrend: StateFlow<List<Float>> = reports.map { list ->
+        list.takeLast(7).map { r ->
+            when (waterQualityFromReport(r.clarity, r.smell)) {
+                WaterQuality.CLEAN    -> 70f + r.clarity * 6f
+                WaterQuality.MODERATE -> 35f + r.clarity * 5f
+                WaterQuality.POLLUTED -> r.clarity * 6f
+            }.coerceIn(0f, 100f)
+        }.ifEmpty { listOf(68f, 72f, 65f, 80f, 74f, 70f, 75f) } // demo data
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), listOf(68f, 72f, 65f, 80f, 74f, 70f, 75f))
 
     // ─── Loading state ───────────────────────────────────────────────────────
     private val _isLoading = MutableStateFlow(false)
@@ -53,6 +81,26 @@ class WaterViewModel @Inject constructor(
     // ─── Error message ───────────────────────────────────────────────────────
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    init {
+        loadRegionName()
+    }
+
+    fun loadRegionName() {
+        viewModelScope.launch {
+            _regionName.value = resolveRegionName(context)
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            loadRegionName()
+            kotlinx.coroutines.delay(800)
+            _isLoading.value = false
+        }
+    }
+
 
     // ─── Home stats (derived) ────────────────────────────────────────────────
     val homeStats: StateFlow<HomeStats> = reports.map { list ->
@@ -133,6 +181,7 @@ class WaterViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), seedAlerts())
 
     fun clearError() = _errorMessage.update { null }
+
 
     // ─── Seed data for empty state demo ─────────────────────────────────────
     private fun seedAlerts() = listOf(

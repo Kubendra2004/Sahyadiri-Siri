@@ -38,10 +38,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.waterquality.navigation.BottomNavTab
 import com.example.waterquality.ui.utils.LocalAppLanguage
 import com.example.waterquality.ui.utils.appStr
+
 
 private data class NavItem(
     val tab:         BottomNavTab,
@@ -68,6 +71,7 @@ private val navItems = listOf(
 fun AnimatedBottomBar(
     currentRoute: String,
     onTabSelected: (BottomNavTab) -> Unit,
+    alertBadgeCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val lang = LocalAppLanguage.current
@@ -130,7 +134,29 @@ fun AnimatedBottomBar(
                             tint       = iconColor,
                             modifier   = Modifier.scale(iconScale)
                         )
+                        // Alert badge dot
+                        if (item.tab == BottomNavTab.ALERTS && alertBadgeCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 6.dp, y = (-4).dp)
+                                    .size(if (alertBadgeCount > 9) 18.dp else 14.dp)
+                                    .background(Color(0xFFFF4757), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (alertBadgeCount <= 9) {
+                                    Text(alertBadgeCount.toString(),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                        color = Color.White, fontWeight = FontWeight.Bold)
+                                } else {
+                                    Text("9+",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.sp),
+                                        color = Color.White, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
                     }
+
                 },
                 label = {
                     Text(
