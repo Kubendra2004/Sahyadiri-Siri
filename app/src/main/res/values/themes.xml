@@ -1,0 +1,11 @@
+<resources xmlns:tools="http://schemas.xml-to-tools.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.WaterQuality" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

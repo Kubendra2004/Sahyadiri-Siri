@@ -1,0 +1,34 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Mountain (Sahyadri) -->
+    <path
+        android:fillColor="#43A047"
+        android:pathData="M26,76 L54,38 L82,76 Z" />
+
+    <!-- Water Drop -->
+    <path
+        android:fillColor="#81D4FA"
+        android:pathData="M54,52 C47,52 41,60 41,70 C41,79 47,85 54,85 C61,85 67,79 67,70 C67,60 61,52 54,52 Z" />
+
+    <!-- Magnifying Glass Ring -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M54,64 A6,6 0 1,0 54,76 A6,6 0 1,0 54,64" />
+
+    <!-- Magnifying Glass Handle -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M58.5,74.5 L64,80" />
+
+    <!-- Leaf -->
+    <path
+        android:fillColor="#C0CA33"
+        android:pathData="M65,62 C69,57 77,57 79,62 C77,67 69,67 65,62 Z" />
+
+</vector>

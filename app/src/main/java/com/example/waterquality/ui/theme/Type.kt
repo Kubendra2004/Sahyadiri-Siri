@@ -1,0 +1,141 @@
+package com.example.waterquality.ui.theme
+
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.example.waterquality.R
+
+/**
+ * Outfit font family — bundled as raw TTF assets.
+ * Covers Light (300), Regular (400), Medium (500), SemiBold (600), Bold (700).
+ * Falls back to system default if resources are missing.
+ */
+val OutfitFamily = FontFamily(
+    Font(R.font.outfit_light,    FontWeight.Light),
+    Font(R.font.outfit_regular,  FontWeight.Normal),
+    Font(R.font.outfit_medium,   FontWeight.Medium),
+    Font(R.font.outfit_semibold, FontWeight.SemiBold),
+    Font(R.font.outfit_bold,     FontWeight.Bold)
+)
+
+/**
+ * Full Material 3 typography scale using Outfit.
+ * Display — large hero numbers/titles on splash/dashboard
+ * Headline — screen titles, card headings
+ * Title — section labels, card sub-headings
+ * Body — primary content, advisory text
+ * Label — chips, badges, captions
+ */
+val SahyadriTypography = Typography(
+    displayLarge = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize   = 57.sp,
+        lineHeight = 64.sp,
+        letterSpacing = (-0.25).sp
+    ),
+    displayMedium = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize   = 45.sp,
+        lineHeight = 52.sp,
+        letterSpacing = 0.sp
+    ),
+    displaySmall = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize   = 36.sp,
+        lineHeight = 44.sp,
+        letterSpacing = 0.sp
+    ),
+    headlineLarge = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize   = 32.sp,
+        lineHeight = 40.sp,
+        letterSpacing = 0.sp
+    ),
+    headlineMedium = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize   = 28.sp,
+        lineHeight = 36.sp,
+        letterSpacing = 0.sp
+    ),
+    headlineSmall = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize   = 24.sp,
+        lineHeight = 32.sp,
+        letterSpacing = 0.sp
+    ),
+    titleLarge = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize   = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    titleMedium = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize   = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.15.sp
+    ),
+    titleSmall = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize   = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    ),
+    bodyLarge = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize   = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize   = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.25.sp
+    ),
+    bodySmall = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize   = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.4.sp
+    ),
+    labelLarge = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize   = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    ),
+    labelMedium = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize   = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize   = 11.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
+    )
+)
+
+// Convenience alias for backward-compat references in the codebase
+val Typography = SahyadriTypography
