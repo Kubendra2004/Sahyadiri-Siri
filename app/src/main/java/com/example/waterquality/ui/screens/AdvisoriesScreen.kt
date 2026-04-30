@@ -1,8 +1,10 @@
-package com.example.waterquality.ui.screens
+﻿package com.example.waterquality.ui.screens
 
+import com.example.waterquality.ui.utils.LocalAppLanguage
+import com.example.waterquality.ui.utils.appStr
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -63,6 +65,7 @@ import kotlin.math.absoluteValue
 fun AdvisoriesScreen(
     viewModel: WaterViewModel = hiltViewModel()
 ) {
+    val lang = LocalAppLanguage.current
     val advisories by viewModel.advisories.collectAsStateWithLifecycle()
     val haptic     = LocalHapticFeedback.current
 
@@ -90,10 +93,10 @@ fun AdvisoriesScreen(
                 .padding(horizontal = 20.dp, vertical = 24.dp)
         ) {
             Column {
-                Text("AI Advisories",
+                Text(appStr(lang, "adv_title"),
                     style      = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold, color = Color.White)
-                Text("Swipe to explore water quality insights",
+                Text(appStr(lang, "adv_subtitle"),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.7f))
             }

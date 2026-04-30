@@ -6,7 +6,6 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -86,22 +85,20 @@ import org.osmdroid.views.overlay.Marker
 
 private enum class MapFilter { ALL, CLEAN, MODERATE, POLLUTED }
 
-// ── Osmdroid MapView wrapped in Compose ──────────────────────────────────────
 @Composable
 fun rememberMapViewWithLifecycle(): MapView {
     val context        = LocalContext.current
     val lifecycle      = LocalLifecycleOwner.current.lifecycle
     val mapView        = remember {
         MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)       // OSM Mapnik — free, no key
+            setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             controller.setZoom(10.0)
-            controller.setCenter(GeoPoint(12.9716, 77.5946)) // Bengaluru default
+            controller.setCenter(GeoPoint(12.9716, 77.5946))
         }
     }
 
-    // Pause / resume MapView following the Activity lifecycle
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -116,18 +113,15 @@ fun rememberMapViewWithLifecycle(): MapView {
     return mapView
 }
 
-// ── Colored circle marker bitmap ─────────────────────────────────────────────
 private fun coloredMarkerBitmap(context: Context, color: Color): android.graphics.drawable.BitmapDrawable {
     val dp  = context.resources.displayMetrics.density
     val size = (24 * dp).toInt()
     val bmp  = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
 
-    // Outer filled circle
     val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color.toArgb() }
     canvas.drawCircle(size / 2f, size / 2f, size / 2f - 2, fill)
 
-    // White ring
     val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         this.color = android.graphics.Color.WHITE
         style = Paint.Style.STROKE
@@ -138,12 +132,12 @@ private fun coloredMarkerBitmap(context: Context, color: Color): android.graphic
     return android.graphics.drawable.BitmapDrawable(context.resources, bmp)
 }
 
-// ── Main screen ──────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
     viewModel: WaterViewModel = hiltViewModel()
 ) {
+    val lang = LocalAppLanguage.current
     val reports by viewModel.reports.collectAsStateWithLifecycle()
     val context  = LocalContext.current
     val scope    = rememberCoroutineScope()
@@ -173,10 +167,8 @@ fun MapScreen(
         }
     }
 
-    // osmdroid MapView — survives recompositions
     val mapView = rememberMapViewWithLifecycle()
 
-    // Update markers whenever filteredReports changes
     LaunchedEffect(filteredReports) {
         mapView.overlays.clear()
         filteredReports.forEach { report ->
@@ -223,6 +215,7 @@ fun MapScreen(
                 selectedReport?.let { report ->
                     MapBottomSheetContent(
                         report  = report,
+                        lang    = lang,
                         onClose = {
                             scope.launch { sheetState.hide() }
                             selectedReport = null
@@ -230,15 +223,13 @@ fun MapScreen(
                     )
                 }
             }
-        ) { _ ->   // Do NOT apply innerPadding to map — it must fill full screen
+        ) { _ ->
             Box(modifier = Modifier.fillMaxSize()) {
-                // ── OSM MapView via AndroidView ──────────────────────────────
                 AndroidView(
                     factory  = { mapView },
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // ── Filter chips ─────────────────────────────────────────────
                 LazyRow(
                     modifier              = Modifier
                         .align(Alignment.TopCenter)
@@ -265,14 +256,12 @@ fun MapScreen(
                     }
                 }
 
-                // ── Legend ───────────────────────────────────────────────────
                 OsmLegend(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(end = 12.dp, bottom = 120.dp)
                 )
 
-                // ── Empty state ──────────────────────────────────────────────
                 if (filteredReports.isEmpty()) {
                     EmptyState(
                         modifier = Modifier.fillMaxSize(),
@@ -284,12 +273,10 @@ fun MapScreen(
             }
         }
 
-        // Blur scrim behind bottom sheet
         BlurScrim(progress = sheetProgress, modifier = Modifier.fillMaxSize())
     }
 }
 
-// ── Legend card ───────────────────────────────────────────────────────────────
 @Composable
 private fun OsmLegend(modifier: Modifier = Modifier) {
     Card(
@@ -328,9 +315,8 @@ private fun OsmLegendItem(color: Color, label: String) {
     }
 }
 
-// ── Bottom sheet content (reused from previous MapScreen) ─────────────────────
 @Composable
-private fun MapBottomSheetContent(report: WaterReport, onClose: () -> Unit) {
+private fun MapBottomSheetContent(report: WaterReport, lang: String, onClose: () -> Unit) {
     val quality = waterQualityFromReport(report.clarity, report.smell)
     val score   = when (quality) {
         WaterQuality.CLEAN    -> 70f + report.clarity * 6f
@@ -350,7 +336,7 @@ private fun MapBottomSheetContent(report: WaterReport, onClose: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment     = Alignment.CenterVertically
         ) {
-            Text("Water Source Detail",
+            Text(appStr(lang, "map_detail"),
                 style      = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold)
             IconButton(onClick = onClose) {

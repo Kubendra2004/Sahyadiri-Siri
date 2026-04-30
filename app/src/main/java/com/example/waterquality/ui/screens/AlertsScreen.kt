@@ -1,5 +1,7 @@
 package com.example.waterquality.ui.screens
 
+import com.example.waterquality.ui.utils.LocalAppLanguage
+import com.example.waterquality.ui.utils.appStr
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -74,6 +76,7 @@ import com.example.waterquality.ui.utils.formatTimestamp
 fun AlertsScreen(
     viewModel: AlertsViewModel = hiltViewModel()
 ) {
+    val lang = LocalAppLanguage.current
     val alerts       by viewModel.filteredAlerts.collectAsStateWithLifecycle()
     val activeFilter by viewModel.activeFilter.collectAsStateWithLifecycle()
     val haptic        = LocalHapticFeedback.current
@@ -96,11 +99,11 @@ fun AlertsScreen(
                     Icon(Icons.Default.Notifications, null,
                         tint = Color.White, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Alert Feed",
+                    Text(appStr(lang, "al_title"),
                         style      = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold, color = Color.White)
                 }
-                Text("Swipe left to dismiss an alert",
+                Text(appStr(lang, "al_hint"),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.7f))
             }
@@ -203,6 +206,7 @@ fun AlertsScreen(
 
 @Composable
 private fun AlertDismissBackground() {
+    val lang = LocalAppLanguage.current
     Box(
         modifier          = Modifier
             .fillMaxSize()
@@ -213,7 +217,7 @@ private fun AlertDismissBackground() {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Delete, "Dismiss", tint = PollutedRed, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(4.dp))
-            Text("Dismiss", color = PollutedRed,
+            Text(appStr(lang, "al_dismiss"), color = PollutedRed,
                 style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
         }
     }
@@ -221,6 +225,7 @@ private fun AlertDismissBackground() {
 
 @Composable
 private fun AlertCard(alert: AlertItem) {
+    val lang = LocalAppLanguage.current
     val (bgColor, accentColor, icon) = when (alert.severity) {
         AlertSeverity.CRITICAL -> Triple(
             PollutedRed.copy(alpha = 0.08f), PollutedRed, Icons.Default.Error

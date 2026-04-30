@@ -1,4 +1,4 @@
-package com.example.waterquality.ui.screens
+﻿package com.example.waterquality.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.spring
@@ -46,7 +46,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        // ── Gradient Header ───────────────────────────────────────────────────
+        // â”€â”€ Gradient Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -73,13 +73,13 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                     fontWeight = FontWeight.Bold,
                     color      = Color.White)
                 Spacer(Modifier.height(4.dp))
-                Text("Member for ${stats.joinedDays} days",
+                Text(appStr(lang, "pro_member_for") + " ${stats.joinedDays} " + appStr(lang, "pro_days"),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(0.7f))
             }
         }
 
-        // ── Stats Row ─────────────────────────────────────────────────────────
+        // â”€â”€ Stats Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         Row(
             modifier              = Modifier
                 .fillMaxWidth()
@@ -92,7 +92,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                 icon  = Icons.Default.Assignment,
                 color = CleanBlue)
             ProfileStatCard(Modifier.weight(1f),
-                value = "${stats.streak}🔥",
+                value = "${stats.streak}ðŸ”¥",
                 label = appStr(lang, "pro_streak"),
                 icon  = Icons.Default.LocalFireDepartment,
                 color = ModerateAmber)
@@ -105,7 +105,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
 
         Spacer(Modifier.height(4.dp))
 
-        // ── Preferences ───────────────────────────────────────────────────────
+        // â”€â”€ Preferences â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         SectionCard(title = appStr(lang, "pro_preferences")) {
             // Dark mode
             SettingsSwitchRow(
@@ -148,7 +148,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                     style    = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("English", "ಕನ್ನಡ").forEach { option ->
+                    listOf("English", "à²•à²¨à³à²¨à²¡").forEach { option ->
                         val selected = language == option
                         val bgColor by animateColorAsState(
                             targetValue   = if (selected) MaterialTheme.colorScheme.primary
@@ -184,7 +184,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
 
         Spacer(Modifier.height(12.dp))
 
-        // ── About ─────────────────────────────────────────────────────────────
+        // â”€â”€ About â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         SectionCard(title = appStr(lang, "pro_about")) {
             AboutRow(Icons.Default.Info,        appStr(lang, "pro_version"),  "1.0.0 (Debug)")
             HorizontalDivider(modifier = Modifier.padding(horizontal = 4.dp))
@@ -197,7 +197,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
     }
 }
 
-// ── Reusable composables ──────────────────────────────────────────────────────
+// â”€â”€ Reusable composables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun ProfileStatCard(
     modifier: Modifier,

@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
+import com.example.waterquality.ui.utils.LocalAppLanguage
+import com.example.waterquality.ui.utils.appStr
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.ImageCapture
@@ -15,7 +17,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -106,6 +107,7 @@ fun ReportSubmissionScreen(
     onNavigateBack: () -> Unit,
     viewModel: ReportSubmissionViewModel = hiltViewModel()
 ) {
+    val lang = LocalAppLanguage.current
     val uiState      by viewModel.uiState.collectAsStateWithLifecycle()
     val context       = LocalContext.current
     val haptic        = LocalHapticFeedback.current
@@ -168,7 +170,7 @@ fun ReportSubmissionScreen(
                     IconButton(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onNavigateBack() }) {
                         Icon(Icons.Default.Close, "Cancel", tint = Color.White)
                     }
-                    Text("Submit Report",
+                    Text(appStr(lang, "rep_submit"),
                         style      = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold, color = Color.White)
                     Spacer(Modifier.width(48.dp))
@@ -239,11 +241,11 @@ fun ReportSubmissionScreen(
             Box(Modifier.fillMaxSize()) {
                 ConfettiCanvas(onFinished = { showConfetti = false })
                 Column(Modifier.fillMaxSize(), Arrangement.Center, Alignment.CenterHorizontally) {
-                    Text("✅", style = MaterialTheme.typography.displayLarge)
+                    Text("âœ…", style = MaterialTheme.typography.displayLarge)
                     Spacer(Modifier.height(12.dp))
-                    Text("Report Submitted!", style = MaterialTheme.typography.titleLarge,
+                    Text(appStr(lang, "rep_submitted"), style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-                    Text("Thank you for contributing", style = MaterialTheme.typography.bodyMedium,
+                    Text(appStr(lang, "rep_thanks"), style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -252,7 +254,7 @@ fun ReportSubmissionScreen(
 }
 
 
-// ─── Step Indicator ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Step Indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun StepIndicator(currentStep: Int) {
     val steps = listOf("Photo", "Details", "Location")
@@ -332,19 +334,20 @@ private fun StepIndicator(currentStep: Int) {
     Spacer(Modifier.height(8.dp))
 }
 
-// ─── Step 0: Photo ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Step 0: Photo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun PhotoStep(imagePath: String?, onCaptureClick: () -> Unit) {
+    val lang = LocalAppLanguage.current
     Column(
         modifier            = Modifier
             .fillMaxWidth()
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Capture Water Photo",
+        Text(appStr(lang, "rep_photo"),
             style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(8.dp))
-        Text("Take a clear photo of the water source",
+        Text(appStr(lang, "rep_photo_hint"),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center)
@@ -378,7 +381,7 @@ private fun PhotoStep(imagePath: String?, onCaptureClick: () -> Unit) {
                             modifier = Modifier.size(56.dp),
                             tint     = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.height(12.dp))
-                        Text("Tap to open camera",
+                        Text(appStr(lang, "rep_tap_cam"),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary)
                     }
@@ -391,13 +394,13 @@ private fun PhotoStep(imagePath: String?, onCaptureClick: () -> Unit) {
             OutlinedButton(onClick = onCaptureClick, shape = RoundedCornerShape(14.dp)) {
                 Icon(Icons.Default.CameraAlt, null, Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Retake Photo")
+                Text(appStr(lang, "rep_retake"))
             }
         }
     }
 }
 
-// ─── Step 1: Details ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Step 1: Details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun DetailsStep(
     clarity:         Int,
@@ -407,6 +410,7 @@ private fun DetailsStep(
     onSmellChange:   (String) -> Unit,
     onFlowChange:    (String) -> Unit
 ) {
+    val lang      = LocalAppLanguage.current
     val haptic    = LocalHapticFeedback.current
     var lastInt   by remember { mutableIntStateOf(clarity) }
 
@@ -416,13 +420,13 @@ private fun DetailsStep(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        Text("Water Details",
+        Text(appStr(lang, "rep_details"),
             style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
 
         // Clarity slider
         Column {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Water Clarity",
+                Text(appStr(lang, "rep_clarity"),
                     style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                 Text("$clarity / 5",
                     style = MaterialTheme.typography.bodyMedium,
@@ -448,16 +452,16 @@ private fun DetailsStep(
             )
             // Clarity label row
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Murky", style = MaterialTheme.typography.labelSmall,
+                Text(appStr(lang, "rep_murky"), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Crystal Clear", style = MaterialTheme.typography.labelSmall,
+                Text(appStr(lang, "rep_crystal"), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
         // Smell
         Column {
-            Text("Smell", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(appStr(lang, "rep_smell"), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 listOf("Normal", "Bad").forEach { option ->
@@ -479,7 +483,7 @@ private fun DetailsStep(
 
         // Flow
         Column {
-            Text("Flow Rate", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(appStr(lang, "rep_flow"), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -509,7 +513,7 @@ private fun DetailsStep(
     }
 }
 
-// ─── Step 2: Location ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Step 2: Location â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun LocationStep(
     latitude:         Double,
@@ -517,6 +521,7 @@ private fun LocationStep(
     onLocationFetched: (Double, Double) -> Unit,
     context:          Context
 ) {
+    val lang   = LocalAppLanguage.current
     val haptic = LocalHapticFeedback.current
 
     val permLauncher = rememberLauncherForActivityResult(
@@ -535,9 +540,9 @@ private fun LocationStep(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("GPS Location",
+        Text(appStr(lang, "rep_location"),
             style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        Text("We need your location to pin the report on the map.",
+        Text(appStr(lang, "rep_loc_hint"),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center)
@@ -564,15 +569,15 @@ private fun LocationStep(
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     if (latitude != 0.0) {
-                        Text("Location captured ✓",
+                        Text(appStr(lang, "rep_loc_cap"),
                             fontWeight = FontWeight.Bold, color = CleanBlue)
                         Text("Lat: ${"%.6f".format(latitude)}\nLon: ${"%.6f".format(longitude)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
-                        Text("Location not captured",
+                        Text(appStr(lang, "rep_loc_none"),
                             fontWeight = FontWeight.Bold)
-                        Text("Tap below to get your GPS coordinates",
+                        Text(appStr(lang, "rep_loc_sub"),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -618,7 +623,7 @@ private fun fetchLastLocation(context: Context, onResult: (Double, Double) -> Un
     }
 }
 
-// ─── Navigation Buttons ───────────────────────────────────────────────────────
+// â”€â”€â”€ Navigation Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun StepNavigationButtons(
     currentStep:  Int,
@@ -628,6 +633,7 @@ private fun StepNavigationButtons(
     onNext:       () -> Unit,
     onSubmit:     () -> Unit
 ) {
+    val lang = LocalAppLanguage.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -640,7 +646,7 @@ private fun StepNavigationButtons(
                 onClick   = onBack,
                 shape     = RoundedCornerShape(16.dp),
                 modifier  = Modifier.weight(1f)
-            ) { Text("Back") }
+            ) { Text(appStr(lang, "rep_back")) }
         }
 
         Button(
@@ -662,7 +668,7 @@ private fun StepNavigationButtons(
     }
 }
 
-// ─── Camera View ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Camera View â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 fun CameraView(onImageCaptured: (String) -> Unit, onClose: () -> Unit) {
     val context        = LocalContext.current

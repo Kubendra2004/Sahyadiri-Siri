@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,10 +21,12 @@ class ConnectivityObserver @Inject constructor(
     val isOnline: Flow<Boolean> = callbackFlow {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-        fun isCurrentlyOnline(): Boolean {
-            val net = cm.activeNetwork ?: return false
+        fun isCurrentlyOnline(): Boolean = try {
+            val net  = cm.activeNetwork ?: return false
             val caps = cm.getNetworkCapabilities(net) ?: return false
-            return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        } catch (e: SecurityException) {
+            true // assume online if we can't check
         }
 
         trySend(isCurrentlyOnline())
@@ -35,9 +38,15 @@ class ConnectivityObserver @Inject constructor(
                 trySend(caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET))
             }
         }
-        val req = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build()
-        cm.registerNetworkCallback(req, cb)
-        awaitClose { cm.unregisterNetworkCallback(cb) }
-    }.distinctUntilChanged()
+        try {
+            val req = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build()
+            cm.registerNetworkCallback(req, cb)
+        } catch (e: SecurityException) {
+            trySend(true) // assume online
+        }
+        awaitClose {
+            try { cm.unregisterNetworkCallback(cb) } catch (_: Exception) {}
+        }
+    }.catch { emit(true) }.distinctUntilChanged()
 }

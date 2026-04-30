@@ -75,10 +75,10 @@ fun MainScaffold(
         ) {
             composable(Routes.HOME) {
                 HomeScreen(
-                    onReportClick     = { id -> navController.navigate(Routes.reportDetail(id)) },
-                    onAddReportClick  = onNavigateToReport,
-                    onMapClick        = { navController.navigate(Routes.MAP) { launchSingleTop = true } },
-                    onAdvisoriesClick = { navController.navigate(Routes.ADVISORIES) { launchSingleTop = true } }
+                    onNavigateToReportDetails = { id -> navController.navigate(Routes.reportDetail(id)) },
+                    onNavigateToReport  = onNavigateToReport,
+                    onNavigateToMap        = { navController.navigate(Routes.MAP) { launchSingleTop = true } },
+                    onNavigateToAdvisories = { navController.navigate(Routes.ADVISORIES) { launchSingleTop = true } }
                 )
             }
             composable(Routes.MAP)         { MapScreen() }

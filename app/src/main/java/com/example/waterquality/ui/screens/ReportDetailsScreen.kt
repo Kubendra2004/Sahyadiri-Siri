@@ -1,5 +1,7 @@
 package com.example.waterquality.ui.screens
 
+import com.example.waterquality.ui.utils.LocalAppLanguage
+import com.example.waterquality.ui.utils.appStr
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +46,7 @@ fun ReportDetailsScreen(
     reportId: String,
     onNavigateBack: () -> Unit = {}
 ) {
+    val lang = LocalAppLanguage.current
     // In production, this would be driven by a ViewModel lookup.
     // For now it shows a structured detail layout ready for data injection.
     val placeholder = WaterReport(
@@ -57,11 +60,11 @@ fun ReportDetailsScreen(
         timestamp = System.currentTimeMillis()
     )
 
-    ReportDetailContent(report = placeholder, onBack = onNavigateBack)
+    ReportDetailContent(report = placeholder, onBack = onNavigateBack, lang = lang)
 }
 
 @Composable
-fun ReportDetailContent(report: WaterReport, onBack: () -> Unit = {}) {
+fun ReportDetailContent(report: WaterReport, onBack: () -> Unit = {}, lang: String) {
     val quality = waterQualityFromReport(report.clarity, report.smell)
     val score   = when (quality) {
         WaterQuality.CLEAN    -> 70f + report.clarity * 6f
@@ -87,7 +90,7 @@ fun ReportDetailContent(report: WaterReport, onBack: () -> Unit = {}) {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
                 }
-                Text("Report Details",
+                Text(appStr(lang, "det_title"),
                     style      = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold, color = Color.White)
             }
@@ -115,7 +118,7 @@ fun ReportDetailContent(report: WaterReport, onBack: () -> Unit = {}) {
                     Icon(Icons.Default.WaterDrop, null,
                         tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Water Analysis",
+                    Text(appStr(lang, "det_analysis"),
                         style      = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold)
                 }
@@ -152,7 +155,7 @@ fun ReportDetailContent(report: WaterReport, onBack: () -> Unit = {}) {
             )
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text("AI Advisory",
+                Text(appStr(lang, "det_ai_advisory"),
                     style      = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color      = MaterialTheme.colorScheme.primary)
