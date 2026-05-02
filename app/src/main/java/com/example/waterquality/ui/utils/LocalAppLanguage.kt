@@ -1,6 +1,7 @@
 package com.example.waterquality.ui.utils
 
 import androidx.compose.runtime.compositionLocalOf
+import java.util.Locale
 
 /** Composition-local that carries the current app language ("English" or "ಕನ್ನಡ"). */
 val LocalAppLanguage = compositionLocalOf { "English" }
@@ -8,6 +9,32 @@ val LocalAppLanguage = compositionLocalOf { "English" }
 /** Returns the localized string for [key] based on the current [language]. */
 fun appStr(language: String, key: String): String =
     (if (language == "ಕನ್ನಡ") KN else EN)[key] ?: key
+
+fun smellLabel(language: String, smell: String): String = when (smell.trim().lowercase(Locale.ROOT)) {
+    "normal" -> appStr(language, "rep_normal")
+    "bad"    -> appStr(language, "rep_bad")
+    else      -> smell
+}
+
+fun flowLabel(language: String, flow: String): String = when (flow.trim().lowercase(Locale.ROOT)) {
+    "low"    -> appStr(language, "rep_low")
+    "medium" -> appStr(language, "rep_medium")
+    "high"   -> appStr(language, "rep_high")
+    else      -> flow
+}
+
+fun reportStatusLabel(language: String, status: String): String = when (status.trim().lowercase(Locale.ROOT)) {
+    "pending" -> appStr(language, "status_pending")
+    "synced"  -> appStr(language, "status_synced")
+    else       -> status
+}
+
+fun advisoryStatusLabel(language: String, status: String): String = when (status.trim().lowercase(Locale.ROOT)) {
+    "critical" -> appStr(language, "adv_status_critical")
+    "caution"  -> appStr(language, "adv_status_caution")
+    "safe"     -> appStr(language, "adv_status_safe")
+    else        -> status
+}
 
 // ── English ───────────────────────────────────────────────────────────────────
 private val EN = mapOf(
@@ -50,6 +77,8 @@ private val EN = mapOf(
     "home_gemini_insight" to "Water quality in %s is mostly clean. %s of sources are safe.",
     "home_member"       to "Member for",
     "home_days"         to "days",
+    "home_user"         to "User",
+    "home_wqi_short"    to "WQI",
     // Map
     "map_title"         to "Water Map",
     "map_all"           to "All",
@@ -59,6 +88,12 @@ private val EN = mapOf(
     "map_empty"         to "No reports here",
     "map_empty_sub"     to "Submit a report to pin it on the map",
     "map_detail"        to "Water Source Detail",
+    "map_marker_title"  to "Clarity %s/5 - %s",
+    "map_marker_flow"   to "Flow: %s",
+    "map_osm_credit"    to "© OpenStreetMap",
+    "map_advisory_clean"    to "✅ Water appears safe for non-potable use. Continue monitoring.",
+    "map_advisory_moderate" to "⚠️ Reduced quality detected. Avoid drinking without treatment.",
+    "map_advisory_polluted" to "🚨 Contamination likely. Avoid all contact. Report to authorities.",
     // Report submission
     "rep_title"         to "Submit Report",
     "rep_cancel"        to "Cancel",
@@ -84,6 +119,14 @@ private val EN = mapOf(
     "rep_loc_sub"       to "Tap below to get your GPS coordinates",
     "rep_get_loc"       to "Get My Location",
     "rep_refresh_loc"   to "Refresh Location",
+    "rep_loc_refresh"   to "Refresh Location",
+    "rep_camera_permission" to "Camera permission required",
+    "rep_step_photo"    to "Photo",
+    "rep_step_details"  to "Details",
+    "rep_step_location" to "Location",
+    "rep_lat"           to "Lat",
+    "rep_lon"           to "Lon",
+    "rep_photo_captured" to "Captured water",
     "rep_continue"      to "Continue",
     "rep_submit"        to "Submit Report",
     "rep_back"          to "Back",
@@ -96,11 +139,17 @@ private val EN = mapOf(
     "al_empty_sub"      to "No active alerts in your area",
     "al_dismiss"        to "Dismiss",
     "al_all"            to "All",
+    "al_sev_critical"   to "Critical",
+    "al_sev_warning"    to "Warning",
+    "al_sev_info"       to "Info",
     // Advisories
     "adv_title"         to "AI Advisories",
     "adv_subtitle"      to "Swipe to explore water quality insights",
     "adv_empty"         to "No advisories yet",
     "adv_empty_sub"     to "Submit reports to generate AI-powered advisories",
+    "adv_status_critical" to "Critical",
+    "adv_status_caution"  to "Caution",
+    "adv_status_safe"     to "Safe",
     // Profile
     "pro_title"         to "Profile",
     "pro_reports"       to "Reports",
@@ -115,16 +164,26 @@ private val EN = mapOf(
     "pro_version"       to "App Version",
     "pro_data"          to "Data Source",
     "pro_ai"            to "AI Engine",
+    "pro_version_value" to "1.0.0 (Debug)",
+    "pro_data_value"    to "OpenStreetMap",
+    "pro_ai_value"      to "Gemini 2.0 Flash",
+    "lang_english"      to "English",
+    "lang_kannada"      to "Kannada",
     "pro_member_for"    to "Member for",
     "pro_days"          to "days",
     // Report details
     "det_title"         to "Report Details",
     "det_analysis"      to "Water Analysis",
     "det_ai_advisory"   to "AI Advisory",
+    "det_advisory_clean"    to "✅ This water source appears to be in good condition. Safe for non-potable use such as irrigation. Continue routine monitoring.",
+    "det_advisory_moderate" to "⚠️ Reduced water clarity detected. Avoid drinking without proper treatment. Boil or filter before potable use.",
+    "det_advisory_polluted" to "🚨 Possible contamination detected. Avoid all direct contact. Notify your local water authority immediately.",
     // Common
     "status_clean"      to "Clean",
     "status_moderate"   to "Moderate",
     "status_polluted"   to "Polluted",
+    "status_pending"    to "Pending",
+    "status_synced"     to "Synced",
     "close"             to "Close",
     "ai_advisory"       to "AI Advisory",
     "clarity"           to "Clarity",
@@ -181,6 +240,8 @@ private val KN = mapOf(
     "home_gemini_insight" to "%s ದಲ್ಲಿ ನೀರಿನ ಗುಣಮಟ್ಟ ಬಹುತೇಕ ಶುದ್ಧವಾಗಿದೆ. %s ಮೂಲಗಳು ಸುರಕ್ಷಿತವಾಗಿವೆ.",
     "home_member"       to "ಸದಸ್ಯ",
     "home_days"         to "ದಿನಗಳು",
+    "home_user"         to "ಬಳಕೆದಾರ",
+    "home_wqi_short"    to "WQI",
     "map_title"         to "ನೀರಿನ ನಕ್ಷೆ",
     "map_all"           to "ಎಲ್ಲಾ",
     "map_clean"         to "ಶುದ್ಧ",
@@ -189,6 +250,12 @@ private val KN = mapOf(
     "map_empty"         to "ಇಲ್ಲಿ ವರದಿಗಳಿಲ್ಲ",
     "map_empty_sub"     to "ನಕ್ಷೆಯಲ್ಲಿ ಪಿನ್ ಮಾಡಲು ವರದಿ ಸಲ್ಲಿಸಿ",
     "map_detail"        to "ನೀರಿನ ಮೂಲ ವಿವರ",
+    "map_marker_title"  to "ಸ್ಪಷ್ಟತೆ %s/5 - %s",
+    "map_marker_flow"   to "ಹರಿವು: %s",
+    "map_osm_credit"    to "© ಓಪನ್ ಸ್ಟ್ರೀಟ್ ಮ್ಯಾಪ್",
+    "map_advisory_clean"    to "✅ ನೀರು ಕುಡಿಯದ ಬಳಕೆಗಾಗಿ ಸುರಕ್ಷಿತವಾಗಿದೆ. ಮೇಲ್ವಿಚಾರಣೆ ಮುಂದುವರಿಸಿ.",
+    "map_advisory_moderate" to "⚠️ ಗುಣಮಟ್ಟ ಕಡಿಮೆ ಕಂಡುಬಂದಿದೆ. ಶುದ್ಧೀಕರಣವಿಲ್ಲದೆ ಕುಡಿಯಬೇಡಿ.",
+    "map_advisory_polluted" to "🚨 ಕಲುಷಿತತೆಯ ಸಾಧ್ಯತೆ. ನೇರ ಸಂಪರ್ಕ ತಪ್ಪಿಸಿ. ಅಧಿಕಾರಿಗಳಿಗೆ ತಿಳಿಸಿ.",
     "rep_title"         to "ವರದಿ ಸಲ್ಲಿಸಿ",
     "rep_cancel"        to "ರದ್ದು",
     "rep_photo"         to "ನೀರಿನ ಫೋಟೋ ತೆಗೆಯಿರಿ",
@@ -213,6 +280,14 @@ private val KN = mapOf(
     "rep_loc_sub"       to "GPS ನಿರ್ದೇಶಾಂಕ ಪಡೆಯಲು ಕೆಳಗೆ ತಟ್ಟಿ",
     "rep_get_loc"       to "ನನ್ನ ಸ್ಥಳ ತಿಳಿಯಿರಿ",
     "rep_refresh_loc"   to "ಸ್ಥಳ ರಿಫ್ರೆಶ್ ಮಾಡಿ",
+    "rep_loc_refresh"   to "ಸ್ಥಳ ರಿಫ್ರೆಶ್ ಮಾಡಿ",
+    "rep_camera_permission" to "ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ಅಗತ್ಯ",
+    "rep_step_photo"    to "ಫೋಟೋ",
+    "rep_step_details"  to "ವಿವರಗಳು",
+    "rep_step_location" to "ಸ್ಥಳ",
+    "rep_lat"           to "ಅಕ್ಷಾಂಶ",
+    "rep_lon"           to "ರೇಖಾಂಶ",
+    "rep_photo_captured" to "ಸೆರೆಹಿಡಿದ ನೀರು",
     "rep_continue"      to "ಮುಂದುವರಿಯಿರಿ",
     "rep_submit"        to "ವರದಿ ಸಲ್ಲಿಸಿ",
     "rep_back"          to "ಹಿಂದೆ",
@@ -224,10 +299,16 @@ private val KN = mapOf(
     "al_empty_sub"      to "ನಿಮ್ಮ ಪ್ರದೇಶದಲ್ಲಿ ಎಚ್ಚರಿಕೆಗಳಿಲ್ಲ",
     "al_dismiss"        to "ವಜಾ",
     "al_all"            to "ಎಲ್ಲಾ",
+    "al_sev_critical"   to "ತೀವ್ರ",
+    "al_sev_warning"    to "ಎಚ್ಚರಿಕೆ",
+    "al_sev_info"       to "ಮಾಹಿತಿ",
     "adv_title"         to "AI ಸಲಹೆಗಳು",
     "adv_subtitle"      to "ಒಳನೋಟಗಳಿಗೆ ಸ್ವೈಪ್ ಮಾಡಿ",
     "adv_empty"         to "ಇನ್ನೂ ಸಲಹೆಗಳಿಲ್ಲ",
     "adv_empty_sub"     to "AI ಸಲಹೆ ಪಡೆಯಲು ವರದಿಗಳನ್ನು ಸಲ್ಲಿಸಿ",
+    "adv_status_critical" to "ತೀವ್ರ",
+    "adv_status_caution"  to "ಜಾಗೃತಿ",
+    "adv_status_safe"     to "ಸುರಕ್ಷಿತ",
     "pro_title"         to "ಪ್ರೊಫೈಲ್",
     "pro_reports"       to "ವರದಿಗಳು",
     "pro_streak"        to "ಸ್ಟ್ರೀಕ್",
@@ -241,14 +322,24 @@ private val KN = mapOf(
     "pro_version"       to "ಅಪ್ಲಿಕೇಶನ್ ಆವೃತ್ತಿ",
     "pro_data"          to "ಡೇಟಾ ಮೂಲ",
     "pro_ai"            to "AI ಎಂಜಿನ್",
+    "pro_version_value" to "1.0.0 (ಡಿಬಗ್)",
+    "pro_data_value"    to "ಓಪನ್ ಸ್ಟ್ರೀಟ್ ಮ್ಯಾಪ್",
+    "pro_ai_value"      to "ಜೆಮಿನಿ 2.0 ಫ್ಲ್ಯಾಶ್",
+    "lang_english"      to "ಇಂಗ್ಲಿಷ್",
+    "lang_kannada"      to "ಕನ್ನಡ",
     "pro_member_for"    to "ಸದಸ್ಯ",
     "pro_days"          to "ದಿನಗಳು",
     "det_title"         to "ವರದಿ ವಿವರಗಳು",
     "det_analysis"      to "ನೀರಿನ ವಿಶ್ಲೇಷಣೆ",
     "det_ai_advisory"   to "AI ಸಲಹೆ",
+    "det_advisory_clean"    to "✅ ಈ ನೀರಿನ ಮೂಲ ಉತ್ತಮ ಸ್ಥಿತಿಯಲ್ಲಿದೆ. ಕುಡಿಯದ ಬಳಕೆಗಳಿಗೆ ಸುರಕ್ಷಿತ. ನಿಯಮಿತ ಮೇಲ್ವಿಚಾರಣೆ ಮುಂದುವರಿಸಿ.",
+    "det_advisory_moderate" to "⚠️ ನೀರಿನ ಸ್ಪಷ್ಟತೆ ಕಡಿಮೆಯಾಗಿದೆ. ಶುದ್ಧೀಕರಣವಿಲ್ಲದೆ ಕುಡಿಯಬೇಡಿ. ಕುದಿಸಿ ಅಥವಾ ಫಿಲ್ಟರ್ ಮಾಡಿ.",
+    "det_advisory_polluted" to "🚨 ಕಲುಷಿತತೆಯ ಸಾಧ್ಯತೆ. ನೇರ ಸಂಪರ್ಕ ತಪ್ಪಿಸಿ. ಸ್ಥಳೀಯ ನೀರಿನ ಅಧಿಕಾರಿಗಳಿಗೆ ತಕ್ಷಣ ತಿಳಿಸಿ.",
     "status_clean"      to "ಶುದ್ಧ",
     "status_moderate"   to "ಮಧ್ಯಮ",
     "status_polluted"   to "ಕಲುಷಿತ",
+    "status_pending"    to "ಬಾಕಿ",
+    "status_synced"     to "ಸಿಂಕ್ ಆಗಿದೆ",
     "close"             to "ಮುಚ್ಚಿ",
     "ai_advisory"       to "AI ಸಲಹೆ",
     "clarity"           to "ಸ್ಪಷ್ಟತೆ",

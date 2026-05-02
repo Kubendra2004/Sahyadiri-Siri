@@ -12,7 +12,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import com.example.waterquality.ui.utils.LocalAppLanguage
 import com.example.waterquality.ui.utils.appStr
+import com.example.waterquality.ui.utils.flowLabel
+import com.example.waterquality.ui.utils.smellLabel
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -75,8 +79,10 @@ import com.example.waterquality.ui.components.waterQualityFromReport
 import com.example.waterquality.ui.theme.CleanBlue
 import com.example.waterquality.ui.theme.ModerateAmber
 import com.example.waterquality.ui.theme.PollutedRed
+import com.example.waterquality.ui.theme.SahyadriTheme
 import com.example.waterquality.ui.viewmodel.WaterViewModel
 import kotlinx.coroutines.launch
+import java.util.Locale
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
@@ -138,6 +144,7 @@ fun MapScreen(
     viewModel: WaterViewModel = hiltViewModel()
 ) {
     val lang = LocalAppLanguage.current
+    val glass = SahyadriTheme.glassColors
     val reports by viewModel.reports.collectAsStateWithLifecycle()
     val context  = LocalContext.current
     val scope    = rememberCoroutineScope()
@@ -173,6 +180,19 @@ fun MapScreen(
         mapView.overlays.clear()
         filteredReports.forEach { report ->
             val quality = waterQualityFromReport(report.clarity, report.smell)
+            val smellText = smellLabel(lang, report.smell)
+            val flowText = flowLabel(lang, report.flow)
+            val markerTitle = String.format(
+                Locale.getDefault(),
+                appStr(lang, "map_marker_title"),
+                report.clarity,
+                smellText
+            )
+            val markerFlow = String.format(
+                Locale.getDefault(),
+                appStr(lang, "map_marker_flow"),
+                flowText
+            )
             val markerColor = when (quality) {
                 WaterQuality.CLEAN    -> CleanBlue
                 WaterQuality.MODERATE -> ModerateAmber
@@ -180,8 +200,8 @@ fun MapScreen(
             }
             Marker(mapView).apply {
                 position  = GeoPoint(report.latitude, report.longitude)
-                title     = "Clarity ${report.clarity}/5 · ${report.smell}"
-                snippet   = "${report.flow} flow"
+                title     = markerTitle
+                snippet   = markerFlow
                 icon      = coloredMarkerBitmap(context, markerColor)
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
                 setOnMarkerClickListener { _, _ ->
@@ -200,27 +220,35 @@ fun MapScreen(
             scaffoldState   = scaffoldState,
             sheetPeekHeight = 0.dp,
             sheetShape      = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            sheetContainerColor = glass.glassSurfaceStrong,
+            sheetContentColor = MaterialTheme.colorScheme.onSurface,
             sheetDragHandle = {
                 Box(
                     Modifier
                         .padding(top = 12.dp, bottom = 4.dp)
                         .size(width = 40.dp, height = 4.dp)
                         .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                            glass.glassBorder,
                             RoundedCornerShape(2.dp)
                         )
                 )
             },
             sheetContent = {
                 selectedReport?.let { report ->
-                    MapBottomSheetContent(
-                        report  = report,
-                        lang    = lang,
-                        onClose = {
-                            scope.launch { sheetState.hide() }
-                            selectedReport = null
-                        }
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, glass.accent.copy(alpha = 0.4f), RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                    ) {
+                        MapBottomSheetContent(
+                            report  = report,
+                            lang    = lang,
+                            onClose = {
+                                scope.launch { sheetState.hide() }
+                                selectedReport = null
+                            }
+                        )
+                    }
                 }
             }
         ) { _ ->
@@ -242,14 +270,14 @@ fun MapScreen(
                         FilterChip(
                             selected = selected,
                             onClick  = { activeFilter = filter },
-                            label    = { Text(filter.name) },
+                            label    = { Text(mapFilterLabel(filter, lang)) },
                             shape    = RoundedCornerShape(50),
                             colors   = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedContainerColor = glass.accent,
                                 selectedLabelColor     = Color.White
                             ),
                             modifier = Modifier.background(
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                                glass.glassSurface.copy(alpha = 0.92f),
                                 RoundedCornerShape(50)
                             )
                         )
@@ -257,6 +285,7 @@ fun MapScreen(
                 }
 
                 OsmLegend(
+                    lang = lang,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(end = 12.dp, bottom = 120.dp)
@@ -266,8 +295,8 @@ fun MapScreen(
                     EmptyState(
                         modifier = Modifier.fillMaxSize(),
                         icon     = Icons.Default.WaterDrop,
-                        title    = "No reports here",
-                        subtitle = "Submit a report to pin it on the map."
+                        title    = appStr(lang, "map_empty"),
+                        subtitle = appStr(lang, "map_empty_sub")
                     )
                 }
             }
@@ -278,24 +307,26 @@ fun MapScreen(
 }
 
 @Composable
-private fun OsmLegend(modifier: Modifier = Modifier) {
+private fun OsmLegend(lang: String, modifier: Modifier = Modifier) {
+    val glass = SahyadriTheme.glassColors
     Card(
         modifier  = modifier,
         shape     = RoundedCornerShape(14.dp),
         colors    = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+            containerColor = glass.glassSurfaceStrong
         ),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(4.dp),
+        border    = BorderStroke(1.dp, glass.glassBorder)
     ) {
         Column(
             modifier = Modifier.padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            OsmLegendItem(CleanBlue,    "Clean")
-            OsmLegendItem(ModerateAmber,"Moderate")
-            OsmLegendItem(PollutedRed,  "Polluted")
+            OsmLegendItem(CleanBlue,    appStr(lang, "status_clean"))
+            OsmLegendItem(ModerateAmber, appStr(lang, "status_moderate"))
+            OsmLegendItem(PollutedRed,  appStr(lang, "status_polluted"))
             Spacer(Modifier.height(2.dp))
-            Text("© OpenStreetMap",
+            Text(appStr(lang, "map_osm_credit"),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
         }
@@ -323,6 +354,8 @@ private fun MapBottomSheetContent(report: WaterReport, lang: String, onClose: ()
         WaterQuality.MODERATE -> 35f + report.clarity * 5f
         WaterQuality.POLLUTED -> report.clarity * 6f
     }
+    val smellText = smellLabel(lang, report.smell)
+    val flowText = flowLabel(lang, report.flow)
 
     Column(
         modifier = Modifier
@@ -340,7 +373,7 @@ private fun MapBottomSheetContent(report: WaterReport, lang: String, onClose: ()
                 style      = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold)
             IconButton(onClick = onClose) {
-                Icon(Icons.Default.Close, "Close")
+                Icon(Icons.Default.Close, appStr(lang, "close"))
             }
         }
 
@@ -355,19 +388,19 @@ private fun MapBottomSheetContent(report: WaterReport, lang: String, onClose: ()
             Column {
                 WaterStatusChip(quality)
                 Spacer(Modifier.height(8.dp))
-                MapInfoRow("Clarity",  "${report.clarity}/5")
-                MapInfoRow("Smell",    report.smell)
-                MapInfoRow("Flow",     report.flow)
-                MapInfoRow("Location", "%.4f, %.4f".format(report.latitude, report.longitude))
+                MapInfoRow(appStr(lang, "clarity"),  "${report.clarity}/5")
+                MapInfoRow(appStr(lang, "smell"),    smellText)
+                MapInfoRow(appStr(lang, "flow"),     flowText)
+                MapInfoRow(appStr(lang, "location"), "%.4f, %.4f".format(report.latitude, report.longitude))
             }
         }
 
         Spacer(Modifier.height(16.dp))
 
         val advisory = when (quality) {
-            WaterQuality.CLEAN    -> "✅ Water appears safe for non-potable use. Continue monitoring."
-            WaterQuality.MODERATE -> "⚠️ Reduced quality detected. Avoid drinking without treatment."
-            WaterQuality.POLLUTED -> "🚨 Contamination likely. Avoid all contact. Report to authorities."
+            WaterQuality.CLEAN    -> appStr(lang, "map_advisory_clean")
+            WaterQuality.MODERATE -> appStr(lang, "map_advisory_moderate")
+            WaterQuality.POLLUTED -> appStr(lang, "map_advisory_polluted")
         }
 
         Card(
@@ -403,4 +436,11 @@ private fun MapInfoRow(label: String, value: String) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface)
     }
+}
+
+private fun mapFilterLabel(filter: MapFilter, lang: String): String = when (filter) {
+    MapFilter.ALL      -> appStr(lang, "map_all")
+    MapFilter.CLEAN    -> appStr(lang, "map_clean")
+    MapFilter.MODERATE -> appStr(lang, "map_moderate")
+    MapFilter.POLLUTED -> appStr(lang, "map_polluted")
 }

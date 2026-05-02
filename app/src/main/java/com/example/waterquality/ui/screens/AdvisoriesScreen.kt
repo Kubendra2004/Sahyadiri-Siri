@@ -1,6 +1,7 @@
 ﻿package com.example.waterquality.ui.screens
 
 import com.example.waterquality.ui.utils.LocalAppLanguage
+import com.example.waterquality.ui.utils.advisoryStatusLabel
 import com.example.waterquality.ui.utils.appStr
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -29,8 +30,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,11 +50,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.waterquality.data.model.Advisory
 import com.example.waterquality.ui.components.EmptyState
+import com.example.waterquality.ui.components.GlassCard
 import com.example.waterquality.ui.components.pagerParallaxOffset
 import com.example.waterquality.ui.theme.CleanBlue
-import com.example.waterquality.ui.theme.GradientOceanColors
 import com.example.waterquality.ui.theme.ModerateAmber
 import com.example.waterquality.ui.theme.PollutedRed
+import com.example.waterquality.ui.theme.SahyadriTheme
 import com.example.waterquality.ui.viewmodel.WaterViewModel
 import com.example.waterquality.ui.utils.formatTimestamp
 import kotlin.math.absoluteValue
@@ -66,6 +66,7 @@ fun AdvisoriesScreen(
     viewModel: WaterViewModel = hiltViewModel()
 ) {
     val lang = LocalAppLanguage.current
+    val glass = SahyadriTheme.glassColors
     val advisories by viewModel.advisories.collectAsStateWithLifecycle()
     val haptic     = LocalHapticFeedback.current
 
@@ -89,7 +90,7 @@ fun AdvisoriesScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(GradientOceanColors))
+                .background(Brush.verticalGradient(glass.oceanGradient))
                 .padding(horizontal = 20.dp, vertical = 24.dp)
         ) {
             Column {
@@ -107,8 +108,8 @@ fun AdvisoriesScreen(
         if (advisories.isEmpty()) {
             EmptyState(
                 modifier = Modifier.fillMaxSize(),
-                title    = "No advisories yet",
-                subtitle = "Submit reports to generate AI-powered advisories."
+                title    = appStr(lang, "adv_empty"),
+                subtitle = appStr(lang, "adv_empty_sub")
             )
         } else {
             // Pager with scale + parallax effect
@@ -156,7 +157,8 @@ fun AdvisoriesScreen(
                 ) {
                     AdvisoryFlashCard(
                         advisory      = advisories[page],
-                        parallaxOffset = parallax
+                        parallaxOffset = parallax,
+                        lang = lang
                     )
                 }
             }
@@ -197,7 +199,8 @@ fun AdvisoriesScreen(
 @Composable
 private fun AdvisoryFlashCard(
     advisory:      Advisory,
-    parallaxOffset: Float = 0f
+    parallaxOffset: Float = 0f,
+    lang: String
 ) {
     val (bgColors, iconTint, icon) = when (advisory.status) {
         "Critical" -> Triple(
@@ -216,15 +219,16 @@ private fun AdvisoryFlashCard(
             Icons.Default.Info
         )
     }
+    val statusLabel = advisoryStatusLabel(lang, advisory.status)
 
-    Card(
-        modifier  = Modifier.fillMaxSize(),
-        shape     = RoundedCornerShape(28.dp),
-        elevation = CardDefaults.cardElevation(8.dp)
+    GlassCard(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(0.dp)
     ) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(bgColors))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(bgColors))
         ) {
             // Parallax background orb
             Box(
@@ -262,7 +266,7 @@ private fun AdvisoryFlashCard(
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text  = advisory.status.uppercase(),
+                            text  = statusLabel,
                             style = MaterialTheme.typography.labelMedium,
                             color = iconTint,
                             fontWeight = FontWeight.Bold

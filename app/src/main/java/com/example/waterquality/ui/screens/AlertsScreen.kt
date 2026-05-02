@@ -34,8 +34,6 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -62,10 +60,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.waterquality.ui.components.EmptyState
-import com.example.waterquality.ui.theme.GradientOceanColors
+import com.example.waterquality.ui.components.GlassCard
 import com.example.waterquality.ui.theme.ModerateAmber
 import com.example.waterquality.ui.theme.PollutedRed
 import com.example.waterquality.ui.theme.CleanBlue
+import com.example.waterquality.ui.theme.SahyadriTheme
 import com.example.waterquality.ui.viewmodel.AlertItem
 import com.example.waterquality.ui.viewmodel.AlertSeverity
 import com.example.waterquality.ui.viewmodel.AlertsViewModel
@@ -77,6 +76,7 @@ fun AlertsScreen(
     viewModel: AlertsViewModel = hiltViewModel()
 ) {
     val lang = LocalAppLanguage.current
+    val glass = SahyadriTheme.glassColors
     val alerts       by viewModel.filteredAlerts.collectAsStateWithLifecycle()
     val activeFilter by viewModel.activeFilter.collectAsStateWithLifecycle()
     val haptic        = LocalHapticFeedback.current
@@ -90,7 +90,7 @@ fun AlertsScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(GradientOceanColors))
+                .background(Brush.verticalGradient(glass.oceanGradient))
                 .statusBarsPadding()
                 .padding(horizontal = 20.dp, vertical = 24.dp)
         ) {
@@ -119,14 +119,14 @@ fun AlertsScreen(
         ) {
             item {
                 SeverityFilterChip(
-                    label    = "All",
+                    label    = appStr(lang, "al_all"),
                     selected = activeFilter == null,
                     onClick  = { viewModel.setFilter(null) }
                 )
             }
             items(AlertSeverity.values().toList()) { severity ->
                 SeverityFilterChip(
-                    label    = severity.name,
+                    label    = severityLabel(severity, lang),
                     selected = activeFilter == severity,
                     color    = severityColor(severity),
                     onClick  = { viewModel.setFilter(severity) }
@@ -138,8 +138,8 @@ fun AlertsScreen(
             EmptyState(
                 modifier = Modifier.fillMaxSize(),
                 icon     = Icons.Default.Notifications,
-                title    = "All clear!",
-                subtitle = "No active alerts in your area."
+                title    = appStr(lang, "al_empty"),
+                subtitle = appStr(lang, "al_empty_sub")
             )
         } else {
             LazyColumn(
@@ -215,7 +215,7 @@ private fun AlertDismissBackground() {
         contentAlignment  = Alignment.CenterEnd
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Delete, "Dismiss", tint = PollutedRed, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Delete, appStr(lang, "al_dismiss"), tint = PollutedRed, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(4.dp))
             Text(appStr(lang, "al_dismiss"), color = PollutedRed,
                 style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
@@ -226,7 +226,7 @@ private fun AlertDismissBackground() {
 @Composable
 private fun AlertCard(alert: AlertItem) {
     val lang = LocalAppLanguage.current
-    val (bgColor, accentColor, icon) = when (alert.severity) {
+    val (_, accentColor, icon) = when (alert.severity) {
         AlertSeverity.CRITICAL -> Triple(
             PollutedRed.copy(alpha = 0.08f), PollutedRed, Icons.Default.Error
         )
@@ -238,14 +238,11 @@ private fun AlertCard(alert: AlertItem) {
         )
     }
 
-    Card(
-        modifier  = Modifier.fillMaxWidth(),
-        shape     = RoundedCornerShape(20.dp),
-        colors    = CardDefaults.cardColors(containerColor = bgColor),
-        elevation = CardDefaults.cardElevation(2.dp)
+    GlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(16.dp)
     ) {
         Row(
-            modifier          = Modifier.padding(16.dp),
             verticalAlignment = Alignment.Top
         ) {
             Box(
@@ -305,10 +302,11 @@ private fun AlertCard(alert: AlertItem) {
 
 @Composable
 private fun SeverityBadge(severity: AlertSeverity) {
+    val lang = LocalAppLanguage.current
     val (color, label) = when (severity) {
-        AlertSeverity.CRITICAL -> PollutedRed to "CRITICAL"
-        AlertSeverity.WARNING  -> ModerateAmber to "WARNING"
-        AlertSeverity.INFO     -> CleanBlue to "INFO"
+        AlertSeverity.CRITICAL -> PollutedRed to appStr(lang, "al_sev_critical")
+        AlertSeverity.WARNING  -> ModerateAmber to appStr(lang, "al_sev_warning")
+        AlertSeverity.INFO     -> CleanBlue to appStr(lang, "al_sev_info")
     }
     Box(
         modifier = Modifier
@@ -344,4 +342,10 @@ private fun severityColor(severity: AlertSeverity) = when (severity) {
     AlertSeverity.CRITICAL -> PollutedRed
     AlertSeverity.WARNING  -> ModerateAmber
     AlertSeverity.INFO     -> CleanBlue
+}
+
+private fun severityLabel(severity: AlertSeverity, lang: String): String = when (severity) {
+    AlertSeverity.CRITICAL -> appStr(lang, "al_sev_critical")
+    AlertSeverity.WARNING  -> appStr(lang, "al_sev_warning")
+    AlertSeverity.INFO     -> appStr(lang, "al_sev_info")
 }

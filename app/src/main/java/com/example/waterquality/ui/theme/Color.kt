@@ -23,11 +23,24 @@ val CleanContainer  = Color(0xFFD6EEFF)
 val ModerateContainer = Color(0xFFFFF3CD)
 val PollutedContainer = Color(0xFFFFDED4)
 
+// ─── Deep Ocean / Glass Tokens ─────────────────────────────────────────────
+val DeepOceanDark        = Color(0xFF001A33)
+val DeepOceanMediumDark  = Color(0xFF003366)
+val DeepOceanLight       = Color(0xFFEAF4FF)
+val DeepOceanMediumLight = Color(0xFFD6E9FF)
+
+val VibrantCyanDark  = Color(0xFF00FFFF)
+val VibrantCyanLight = Color(0xFF00A3C7)
+
+val DarkGlassBase    = Color(0xFF19202C)
+val SurfaceTintDark  = Color(0xFFA7C8FF)
+val SurfaceTintLight = Color(0xFF2B4C6F)
+
 // ─── Surfaces / Background ──────────────────────────────────────────────────
 // Light
-val SurfaceLight        = Color(0xFFF5F9FF)
-val SurfaceVariantLight = Color(0xFFE0EFFF)
-val BackgroundLight     = Color(0xFFF0F6FF)
+val SurfaceLight        = Color(0xFFF6FAFF)
+val SurfaceVariantLight = Color(0xFFE2F0FF)
+val BackgroundLight     = DeepOceanLight
 val OnSurfaceLight      = Color(0xFF111827)
 val OnSurfaceVariantLight = Color(0xFF3D5068)
 val OutlineLight        = Color(0xFFB0C8E8)
@@ -35,7 +48,7 @@ val OutlineLight        = Color(0xFFB0C8E8)
 // Dark
 val SurfaceDark         = Color(0xFF0D1B2A)
 val SurfaceVariantDark  = Color(0xFF152435)
-val BackgroundDark      = Color(0xFF08131D)
+val BackgroundDark      = DeepOceanDark
 val OnSurfaceDark       = Color(0xFFE8F1FF)
 val OnSurfaceVariantDark = Color(0xFFA8C4E0)
 val OutlineDark         = Color(0xFF2D4A66)
@@ -56,8 +69,9 @@ val OnErrorRedDark      = Color(0xFF690005)
 val OnErrorContainerDark = Color(0xFFFFDAD6)
 
 // ─── Gradients (for use with Brush) ─────────────────────────────────────────
-// Use these in screens directly: Brush.linearGradient(GradientOcean)
-val GradientOceanColors   = listOf(Color(0xFF0A4B8C), Color(0xFF006EBE), Color(0xFF00A8CC))
+// Use these in screens directly: Brush.linearGradient(GradientOceanColors)
+val GradientOceanColors      = listOf(Color(0xFF0A4B8C), Color(0xFF006EBE), Color(0xFF00A8CC))
+val GradientOceanLightColors = listOf(Color(0xFFEAF6FF), Color(0xFFCFE6FF), Color(0xFF99CCFF))
 val GradientSunsetColors  = listOf(Color(0xFFE87722), Color(0xFFF5A623), Color(0xFFFFD166))
 val GradientAlertColors   = listOf(Color(0xFFBA1A1A), Color(0xFFE53935))
 val GradientCardDark      = listOf(Color(0xFF152435), Color(0xFF0D1B2A))

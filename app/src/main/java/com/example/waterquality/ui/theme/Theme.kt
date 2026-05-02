@@ -6,7 +6,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
@@ -72,6 +74,46 @@ private val DarkColorScheme = darkColorScheme(
     inversePrimary         = OceanBlue
 )
 
+data class GlassColors(
+    val oceanDeep: Color,
+    val oceanMedium: Color,
+    val accent: Color,
+    val glassSurface: Color,
+    val glassSurfaceStrong: Color,
+    val glassBorder: Color,
+    val surfaceTint: Color,
+    val oceanGradient: List<Color>
+)
+
+private val DarkGlassColors = GlassColors(
+    oceanDeep         = DeepOceanDark,
+    oceanMedium       = DeepOceanMediumDark,
+    accent            = VibrantCyanDark,
+    glassSurface      = DarkGlassBase,
+    glassSurfaceStrong = DarkGlassBase.copy(alpha = 0.85f),
+    glassBorder       = Color.White.copy(alpha = 0.15f),
+    surfaceTint       = SurfaceTintDark,
+    oceanGradient     = GradientOceanColors
+)
+
+private val LightGlassColors = GlassColors(
+    oceanDeep         = DeepOceanLight,
+    oceanMedium       = DeepOceanMediumLight,
+    accent            = VibrantCyanLight,
+    glassSurface      = GlassLight,
+    glassSurfaceStrong = Color.White.copy(alpha = 0.85f),
+    glassBorder       = Color(0x66FFFFFF),
+    surfaceTint       = SurfaceTintLight,
+    oceanGradient     = GradientOceanLightColors
+)
+
+val LocalGlassColors = staticCompositionLocalOf { DarkGlassColors }
+
+object SahyadriTheme {
+    val glassColors: GlassColors
+        @Composable get() = LocalGlassColors.current
+}
+
 /**
  * Root theme composable for Sahyadri-Siri.
  *
@@ -85,6 +127,7 @@ fun WaterQualityTheme(
     content:   @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val glassColors = if (darkTheme) DarkGlassColors else LightGlassColors
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -99,10 +142,12 @@ fun WaterQualityTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography  = SahyadriTypography,
-        shapes      = SahyadriShapes,
-        content     = content
-    )
+    CompositionLocalProvider(LocalGlassColors provides glassColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography  = SahyadriTypography,
+            shapes      = SahyadriShapes,
+            content     = content
+        )
+    }
 }

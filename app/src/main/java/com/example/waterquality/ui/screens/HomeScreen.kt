@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.waterquality.data.model.WaterReport
+import com.example.waterquality.ui.components.GlassCard
 import com.example.waterquality.ui.components.waterQualityFromReport
 import com.example.waterquality.ui.components.WaterQuality
 import com.example.waterquality.ui.theme.*
@@ -40,13 +41,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
-// Custom Colors for Stitch Dashboard Aesthetic
-private val DeepOcean = Color(0xFF001A33)
-private val DeepOceanMedium = Color(0xFF003366)
-private val VibrantCyan = Color(0xFF00FFFF)
-private val DarkGlass = Color(0xFF19202C)
-private val SurfaceTint = Color(0xFFA7C8FF)
 
 // Wave Path generation
 private fun Path.wavePath(width: Float, height: Float, phase: Float, fillPercentage: Float) {
@@ -69,6 +63,7 @@ private fun Path.wavePath(width: Float, height: Float, phase: Float, fillPercent
 
 @Composable
 private fun LiquidFillWqiMeter(score: Float, lang: String, modifier: Modifier = Modifier) {
+    val glass = SahyadriTheme.glassColors
     val fillPercentage = (score / 100f).coerceIn(0f, 1f)
     val infiniteTransition = rememberInfiniteTransition(label = "wave")
     val phase by infiniteTransition.animateFloat(
@@ -82,8 +77,8 @@ private fun LiquidFillWqiMeter(score: Float, lang: String, modifier: Modifier = 
         modifier = modifier
             .size(160.dp)
             .clip(CircleShape)
-            .background(DarkGlass.copy(alpha = 0.5f))
-            .border(2.dp, VibrantCyan.copy(alpha = 0.5f), CircleShape),
+            .background(glass.glassSurface.copy(alpha = 0.6f))
+            .border(2.dp, glass.accent.copy(alpha = 0.5f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -97,10 +92,10 @@ private fun LiquidFillWqiMeter(score: Float, lang: String, modifier: Modifier = 
             // Draw background liquid
             val bgPhase = phase + Math.PI.toFloat() / 2f
             val bgPath = Path().apply { wavePath(canvasWidth, canvasHeight, bgPhase, fillPercentage) }
-            drawPath(bgPath, color = DeepOceanMedium.copy(alpha = 0.6f))
+            drawPath(bgPath, color = glass.oceanMedium.copy(alpha = 0.6f))
             
             // Draw foreground liquid
-            drawPath(wavePath, color = VibrantCyan.copy(alpha = 0.8f))
+            drawPath(wavePath, color = glass.accent.copy(alpha = 0.8f))
         }
         
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -108,30 +103,14 @@ private fun LiquidFillWqiMeter(score: Float, lang: String, modifier: Modifier = 
                 text = score.toInt().toString(),
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "WQI",
+                text = appStr(lang, "home_wqi_short"),
                 style = MaterialTheme.typography.labelMedium,
-                color = SurfaceTint,
+                color = glass.surfaceTint,
                 fontWeight = FontWeight.SemiBold
             )
-        }
-    }
-}
-
-@Composable
-private fun GlassCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Card(
-        modifier = modifier.shadow(8.dp, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = DarkGlass.copy(alpha = 0.85f)
-        ),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
-    ) {
-        Column(modifier = Modifier.padding(24.dp)) {
-            content()
         }
     }
 }
@@ -143,25 +122,26 @@ private fun QuickActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val glass = SahyadriTheme.glassColors
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(
                 Brush.verticalGradient(
-                    listOf(DeepOceanMedium.copy(alpha = 0.6f), DeepOcean.copy(alpha = 0.9f))
+                    listOf(glass.oceanMedium.copy(alpha = 0.6f), glass.oceanDeep.copy(alpha = 0.9f))
                 )
             )
-            .border(1.dp, VibrantCyan.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+            .border(1.dp, glass.accent.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(icon, contentDescription = label, tint = VibrantCyan, modifier = Modifier.size(28.dp))
+        Icon(icon, contentDescription = label, tint = glass.accent, modifier = Modifier.size(28.dp))
         Spacer(Modifier.height(8.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.SemiBold
         )
     }
@@ -178,6 +158,7 @@ fun HomeScreen(
     onNavigateToReportDetails: (String) -> Unit = {}
 ) {
     val lang = LocalAppLanguage.current
+    val glass = SahyadriTheme.glassColors
     val reports by viewModel.reports.collectAsStateWithLifecycle()
     val isOnline by viewModel.isOnline.collectAsStateWithLifecycle(initialValue = true)
     
@@ -207,7 +188,7 @@ fun HomeScreen(
                 isRefreshing = false
             }
         },
-        modifier = modifier.fillMaxSize().background(DeepOcean)
+        modifier = modifier.fillMaxSize().background(glass.oceanDeep)
     ) {
         Column(
             modifier = Modifier
@@ -220,16 +201,14 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        Brush.verticalGradient(
-                            listOf(DeepOceanMedium, DeepOcean)
-                        )
+                        Brush.verticalGradient(glass.oceanGradient)
                     )
             ) {
                 // Ambient background glow
                 Canvas(Modifier.fillMaxSize()) {
                     drawCircle(
                         brush = Brush.radialGradient(
-                            colors = listOf(VibrantCyan.copy(alpha = 0.2f), Color.Transparent),
+                            colors = listOf(glass.accent.copy(alpha = 0.2f), Color.Transparent),
                             center = Offset(size.width / 2, 0f),
                             radius = size.width * 0.8f
                         )
@@ -250,26 +229,26 @@ fun HomeScreen(
                         Column {
                             val greeting = appStr(lang, "greet_morning") // Dynamic in real app
                             Text(
-                                "$greeting, User",
+                                "$greeting, ${appStr(lang, "home_user")}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
                                 appStr(lang, "home_subtitle"),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = SurfaceTint
+                                color = glass.surfaceTint
                             )
                         }
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
-                                .background(DarkGlass)
-                                .border(1.dp, VibrantCyan.copy(alpha = 0.5f), CircleShape),
+                                .background(glass.glassSurface)
+                                .border(1.dp, glass.accent.copy(alpha = 0.5f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Person, contentDescription = null, tint = VibrantCyan)
+                            Icon(Icons.Default.Person, contentDescription = null, tint = glass.accent)
                         }
                     }
 
@@ -282,7 +261,7 @@ fun HomeScreen(
                         appStr(lang, "home_wqi").uppercase(),
                         style = MaterialTheme.typography.labelMedium,
                         letterSpacing = 2.sp,
-                        color = Color.White.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -305,13 +284,13 @@ fun HomeScreen(
             Column(Modifier.padding(horizontal = 24.dp)) {
                 GlassCard {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.AutoAwesome, null, tint = VibrantCyan, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.AutoAwesome, null, tint = glass.accent, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(12.dp))
                         Text(
                             appStr(lang, "home_gemini_title").uppercase(),
                             style = MaterialTheme.typography.labelSmall,
                             letterSpacing = 1.sp,
-                            color = VibrantCyan,
+                            color = glass.accent,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -319,7 +298,7 @@ fun HomeScreen(
                     Text(
                         text = insightText,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onBackground,
                         lineHeight = 24.sp
                     )
                 }
@@ -364,12 +343,12 @@ fun HomeScreen(
                     appStr(lang, "home_recent"),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
                     appStr(lang, "home_see_all"),
                     style = MaterialTheme.typography.labelMedium,
-                    color = VibrantCyan,
+                    color = glass.accent,
                     modifier = Modifier.clickable { onNavigateToMap() }
                 )
             }
@@ -383,7 +362,7 @@ fun HomeScreen(
                 ) {
                     Text(
                         appStr(lang, "home_empty"),
-                        color = Color.White.copy(alpha = 0.5f),
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -405,6 +384,7 @@ fun HomeScreen(
 
 @Composable
 private fun RecentReportGlassCard(report: WaterReport, lang: String, onClick: () -> Unit) {
+    val glass = SahyadriTheme.glassColors
     val format = remember { SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()) }
     val dateStr = format.format(Date(report.timestamp))
     val quality = waterQualityFromReport(report.clarity, report.smell)
@@ -414,8 +394,8 @@ private fun RecentReportGlassCard(report: WaterReport, lang: String, onClick: ()
             .width(220.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkGlass.copy(alpha = 0.8f)),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        colors = CardDefaults.cardColors(containerColor = glass.glassSurfaceStrong),
+        border = BorderStroke(1.dp, glass.glassBorder)
     ) {
         Column {
             // Fake Image Header
@@ -423,10 +403,15 @@ private fun RecentReportGlassCard(report: WaterReport, lang: String, onClick: ()
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .background(DeepOceanMedium.copy(alpha = 0.5f)),
+                    .background(glass.oceanMedium.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Image, null, tint = Color.White.copy(alpha = 0.2f), modifier = Modifier.size(40.dp))
+                Icon(
+                    Icons.Default.Image,
+                    null,
+                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                    modifier = Modifier.size(40.dp)
+                )
                 
                 // Status Badge
                 val badgeColor = when (quality) {
@@ -460,14 +445,14 @@ private fun RecentReportGlassCard(report: WaterReport, lang: String, onClick: ()
                 Text(
                     "%.4f, %.4f".format(report.latitude, report.longitude),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 1
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     dateStr,
                     style = MaterialTheme.typography.labelSmall,
-                    color = SurfaceTint.copy(alpha = 0.8f)
+                    color = glass.surfaceTint.copy(alpha = 0.8f)
                 )
             }
         }

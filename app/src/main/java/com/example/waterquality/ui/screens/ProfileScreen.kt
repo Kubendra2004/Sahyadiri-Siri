@@ -23,10 +23,11 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.waterquality.ui.components.GlassCard
 import com.example.waterquality.ui.theme.CleanBlue
-import com.example.waterquality.ui.theme.GradientOceanColors
 import com.example.waterquality.ui.theme.ModerateAmber
 import com.example.waterquality.ui.theme.PollutedRed
+import com.example.waterquality.ui.theme.SahyadriTheme
 import com.example.waterquality.ui.utils.LocalAppLanguage
 import com.example.waterquality.ui.utils.appStr
 import com.example.waterquality.ui.viewmodel.ProfileViewModel
@@ -34,11 +35,17 @@ import com.example.waterquality.ui.viewmodel.ProfileViewModel
 @Composable
 fun ProfileScreen(viewModel: ProfileViewModel) {
     val lang         = LocalAppLanguage.current
+    val glass        = SahyadriTheme.glassColors
     val isDark       by viewModel.isDarkMode.collectAsStateWithLifecycle()
     val notifEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val language     by viewModel.selectedLanguage.collectAsStateWithLifecycle()
     val stats        by viewModel.profileStats.collectAsStateWithLifecycle()
     val haptic       = LocalHapticFeedback.current
+
+    val languageOptions = listOf(
+        "English" to appStr(lang, "lang_english"),
+        "ಕನ್ನಡ" to appStr(lang, "lang_kannada")
+    )
 
     Column(
         modifier = Modifier
@@ -50,7 +57,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(GradientOceanColors))
+                .background(Brush.verticalGradient(glass.oceanGradient))
                 .statusBarsPadding()
                 .padding(horizontal = 20.dp, vertical = 28.dp)
         ) {
@@ -92,7 +99,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                 icon  = Icons.Default.Assignment,
                 color = CleanBlue)
             ProfileStatCard(Modifier.weight(1f),
-                value = "${stats.streak}ðŸ”¥",
+                value = "${stats.streak}",
                 label = appStr(lang, "pro_streak"),
                 icon  = Icons.Default.LocalFireDepartment,
                 color = ModerateAmber)
@@ -148,8 +155,8 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                     style    = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("English", "à²•à²¨à³à²¨à²¡").forEach { option ->
-                        val selected = language == option
+                    languageOptions.forEach { (value, label) ->
+                        val selected = language == value
                         val bgColor by animateColorAsState(
                             targetValue   = if (selected) MaterialTheme.colorScheme.primary
                                             else MaterialTheme.colorScheme.surfaceVariant,
@@ -165,14 +172,14 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                         Button(
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                viewModel.setLanguage(option)
+                                viewModel.setLanguage(value)
                             },
                             colors         = ButtonDefaults.buttonColors(containerColor = bgColor),
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                             shape          = RoundedCornerShape(10.dp),
                             elevation      = ButtonDefaults.buttonElevation(0.dp)
                         ) {
-                            Text(option, color = textColor,
+                            Text(label, color = textColor,
                                 style      = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
                         }
@@ -186,11 +193,11 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
 
         // â”€â”€ About â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         SectionCard(title = appStr(lang, "pro_about")) {
-            AboutRow(Icons.Default.Info,        appStr(lang, "pro_version"),  "1.0.0 (Debug)")
+            AboutRow(Icons.Default.Info,        appStr(lang, "pro_version"),  appStr(lang, "pro_version_value"))
             HorizontalDivider(modifier = Modifier.padding(horizontal = 4.dp))
-            AboutRow(Icons.Default.Cloud,       appStr(lang, "pro_data"),     "OpenStreetMap")
+            AboutRow(Icons.Default.Cloud,       appStr(lang, "pro_data"),     appStr(lang, "pro_data_value"))
             HorizontalDivider(modifier = Modifier.padding(horizontal = 4.dp))
-            AboutRow(Icons.Default.AutoAwesome, appStr(lang, "pro_ai"),       "Gemini 2.0 Flash")
+            AboutRow(Icons.Default.AutoAwesome, appStr(lang, "pro_ai"),       appStr(lang, "pro_ai_value"))
         }
 
         Spacer(Modifier.height(32.dp))
@@ -228,9 +235,10 @@ private fun SectionCard(title: String, content: @Composable ColumnScope.() -> Un
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(bottom = 8.dp))
-        Card(shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(2.dp),
-            modifier = Modifier.fillMaxWidth()) {
+        GlassCard(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(0.dp)
+        ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 content()
             }

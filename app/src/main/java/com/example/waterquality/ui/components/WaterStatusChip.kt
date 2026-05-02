@@ -20,6 +20,8 @@ import com.example.waterquality.ui.theme.ModerateAmber
 import com.example.waterquality.ui.theme.ModerateContainer
 import com.example.waterquality.ui.theme.PollutedContainer
 import com.example.waterquality.ui.theme.PollutedRed
+import com.example.waterquality.ui.utils.LocalAppLanguage
+import com.example.waterquality.ui.utils.appStr
 
 enum class WaterQuality { CLEAN, MODERATE, POLLUTED }
 
@@ -34,10 +36,11 @@ fun WaterStatusChip(
     quality:  WaterQuality,
     modifier: Modifier = Modifier
 ) {
+    val lang = LocalAppLanguage.current
     val (label, fg, bg) = when (quality) {
-        WaterQuality.CLEAN    -> Triple("CLEAN",    CleanBlue,    CleanContainer)
-        WaterQuality.MODERATE -> Triple("MODERATE", ModerateAmber, ModerateContainer)
-        WaterQuality.POLLUTED -> Triple("POLLUTED", PollutedRed,  PollutedContainer)
+        WaterQuality.CLEAN    -> Triple(appStr(lang, "status_clean"),    CleanBlue,    CleanContainer)
+        WaterQuality.MODERATE -> Triple(appStr(lang, "status_moderate"), ModerateAmber, ModerateContainer)
+        WaterQuality.POLLUTED -> Triple(appStr(lang, "status_polluted"), PollutedRed,  PollutedContainer)
     }
 
     val animatedBg by animateColorAsState(

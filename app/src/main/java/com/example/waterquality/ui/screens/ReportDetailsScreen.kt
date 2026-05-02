@@ -3,6 +3,7 @@ package com.example.waterquality.ui.screens
 import com.example.waterquality.ui.utils.LocalAppLanguage
 import com.example.waterquality.ui.utils.appStr
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,8 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,8 +37,12 @@ import com.example.waterquality.ui.components.WaterQuality
 import com.example.waterquality.ui.components.WaterScoreMeter
 import com.example.waterquality.ui.components.WaterStatusChip
 import com.example.waterquality.ui.components.waterQualityFromReport
-import com.example.waterquality.ui.theme.GradientOceanColors
+import com.example.waterquality.ui.components.GlassCard
+import com.example.waterquality.ui.theme.SahyadriTheme
 import com.example.waterquality.ui.utils.formatTimestamp
+import com.example.waterquality.ui.utils.flowLabel
+import com.example.waterquality.ui.utils.reportStatusLabel
+import com.example.waterquality.ui.utils.smellLabel
 
 @Composable
 fun ReportDetailsScreen(
@@ -65,6 +68,7 @@ fun ReportDetailsScreen(
 
 @Composable
 fun ReportDetailContent(report: WaterReport, onBack: () -> Unit = {}, lang: String) {
+    val glass = SahyadriTheme.glassColors
     val quality = waterQualityFromReport(report.clarity, report.smell)
     val score   = when (quality) {
         WaterQuality.CLEAN    -> 70f + report.clarity * 6f
@@ -75,20 +79,20 @@ fun ReportDetailContent(report: WaterReport, onBack: () -> Unit = {}, lang: Stri
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(glass.oceanDeep)
             .verticalScroll(rememberScrollState())
     ) {
         // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(GradientOceanColors))
+                .background(Brush.verticalGradient(glass.oceanGradient))
                 .statusBarsPadding()
                 .padding(horizontal = 8.dp, vertical = 16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
+                    Icon(Icons.Default.ArrowBack, appStr(lang, "rep_back"), tint = Color.White)
                 }
                 Text(appStr(lang, "det_title"),
                     style      = MaterialTheme.typography.titleLarge,
@@ -106,62 +110,58 @@ fun ReportDetailContent(report: WaterReport, onBack: () -> Unit = {}, lang: Stri
         Spacer(Modifier.height(24.dp))
 
         // Status + Details card
-        Card(
-            modifier  = Modifier
+        GlassCard(
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            shape     = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
+            contentPadding = PaddingValues(20.dp)
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.WaterDrop, null,
-                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(appStr(lang, "det_analysis"),
-                        style      = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold)
-                }
-
-                Spacer(Modifier.height(16.dp))
-                WaterStatusChip(quality)
-                Spacer(Modifier.height(16.dp))
-
-                DetailRow("Clarity",   "${report.clarity} / 5")
-                DetailRow("Smell",     report.smell)
-                DetailRow("Flow Rate", report.flow)
-                DetailRow("Location",  "%.4f, %.4f".format(report.latitude, report.longitude))
-                DetailRow("Reported",  formatTimestamp(report.timestamp))
-                DetailRow("Status",    report.status)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.WaterDrop,
+                    null,
+                    tint = glass.accent,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(appStr(lang, "det_analysis"),
+                    style      = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold)
             }
+
+            Spacer(Modifier.height(16.dp))
+            WaterStatusChip(quality)
+            Spacer(Modifier.height(16.dp))
+
+            DetailRow(appStr(lang, "clarity"),   "${report.clarity} / 5")
+            DetailRow(appStr(lang, "smell"),     smellLabel(lang, report.smell))
+            DetailRow(appStr(lang, "flow"),      flowLabel(lang, report.flow))
+            DetailRow(appStr(lang, "location"),  "%.4f, %.4f".format(report.latitude, report.longitude))
+            DetailRow(appStr(lang, "reported"),  formatTimestamp(report.timestamp))
+            DetailRow(appStr(lang, "status"),    reportStatusLabel(lang, report.status))
         }
 
         Spacer(Modifier.height(16.dp))
 
         // Advisory card
         val advisory = when (quality) {
-            WaterQuality.CLEAN    -> "✅ This water source appears to be in good condition. Safe for non-potable use such as irrigation. Continue routine monitoring."
-            WaterQuality.MODERATE -> "⚠️ Reduced water clarity detected. Avoid drinking without proper treatment. Boil or filter before potable use."
-            WaterQuality.POLLUTED -> "🚨 Possible contamination detected. Avoid all direct contact. Notify your local water authority immediately."
+            WaterQuality.CLEAN    -> appStr(lang, "det_advisory_clean")
+            WaterQuality.MODERATE -> appStr(lang, "det_advisory_moderate")
+            WaterQuality.POLLUTED -> appStr(lang, "det_advisory_polluted")
         }
 
-        Card(
-            modifier  = Modifier
+        GlassCard(
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            shape     = RoundedCornerShape(20.dp),
-            colors    = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-            )
+            contentPadding = PaddingValues(20.dp)
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(appStr(lang, "det_ai_advisory"),
-                    style      = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color      = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(8.dp))
-                Text(advisory, style = MaterialTheme.typography.bodyMedium)
-            }
+            Text(appStr(lang, "det_ai_advisory"),
+                style      = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color      = glass.accent)
+            Spacer(Modifier.height(8.dp))
+            Text(advisory, style = MaterialTheme.typography.bodyMedium)
         }
 
         Spacer(Modifier.height(32.dp))

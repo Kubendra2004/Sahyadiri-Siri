@@ -24,6 +24,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -96,8 +97,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.example.waterquality.ui.components.hapticClickable
 import com.example.waterquality.ui.components.verticalSwipeResistance
-import com.example.waterquality.ui.theme.CleanBlue
-import com.example.waterquality.ui.theme.GradientOceanColors
+import com.example.waterquality.ui.theme.SahyadriTheme
 import com.example.waterquality.ui.viewmodel.ReportSubmissionViewModel
 import java.io.File
 
@@ -108,6 +108,7 @@ fun ReportSubmissionScreen(
     viewModel: ReportSubmissionViewModel = hiltViewModel()
 ) {
     val lang = LocalAppLanguage.current
+    val glass = SahyadriTheme.glassColors
     val uiState      by viewModel.uiState.collectAsStateWithLifecycle()
     val context       = LocalContext.current
     val haptic        = LocalHapticFeedback.current
@@ -158,7 +159,7 @@ fun ReportSubmissionScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Brush.verticalGradient(GradientOceanColors))
+                    .background(Brush.verticalGradient(glass.oceanGradient))
                     .statusBarsPadding()
                     .padding(horizontal = 16.dp, vertical = 20.dp)
             ) {
@@ -168,9 +169,9 @@ fun ReportSubmissionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onNavigateBack() }) {
-                        Icon(Icons.Default.Close, "Cancel", tint = Color.White)
+                        Icon(Icons.Default.Close, appStr(lang, "rep_cancel"), tint = Color.White)
                     }
-                    Text(appStr(lang, "rep_submit"),
+                    Text(appStr(lang, "rep_title"),
                         style      = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold, color = Color.White)
                     Spacer(Modifier.width(48.dp))
@@ -241,7 +242,12 @@ fun ReportSubmissionScreen(
             Box(Modifier.fillMaxSize()) {
                 ConfettiCanvas(onFinished = { showConfetti = false })
                 Column(Modifier.fillMaxSize(), Arrangement.Center, Alignment.CenterHorizontally) {
-                    Text("âœ…", style = MaterialTheme.typography.displayLarge)
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = glass.accent,
+                        modifier = Modifier.size(56.dp)
+                    )
                     Spacer(Modifier.height(12.dp))
                     Text(appStr(lang, "rep_submitted"), style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
@@ -257,7 +263,13 @@ fun ReportSubmissionScreen(
 // â”€â”€â”€ Step Indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 private fun StepIndicator(currentStep: Int) {
-    val steps = listOf("Photo", "Details", "Location")
+    val lang = LocalAppLanguage.current
+    val glass = SahyadriTheme.glassColors
+    val steps = listOf(
+        appStr(lang, "rep_step_photo"),
+        appStr(lang, "rep_step_details"),
+        appStr(lang, "rep_step_location")
+    )
     Row(
         modifier  = Modifier
             .fillMaxWidth()
@@ -275,8 +287,8 @@ private fun StepIndicator(currentStep: Int) {
                     .size(32.dp)
                     .background(
                         when {
-                            isComplete -> CleanBlue
-                            isActive   -> MaterialTheme.colorScheme.primary
+                            isComplete -> glass.accent
+                            isActive   -> glass.accent
                             else       -> MaterialTheme.colorScheme.surfaceVariant
                         },
                         CircleShape
@@ -302,7 +314,7 @@ private fun StepIndicator(currentStep: Int) {
             if (isActive) {
                 Text(label,
                     style      = MaterialTheme.typography.labelMedium,
-                    color      = MaterialTheme.colorScheme.primary,
+                    color      = glass.accent,
                     fontWeight = FontWeight.SemiBold)
             }
 
@@ -313,7 +325,7 @@ private fun StepIndicator(currentStep: Int) {
                         .weight(1f)
                         .height(2.dp)
                         .background(
-                            if (isComplete) CleanBlue.copy(0.5f)
+                            if (isComplete) glass.accent.copy(alpha = 0.5f)
                             else MaterialTheme.colorScheme.surfaceVariant,
                             RoundedCornerShape(1.dp)
                         )
@@ -328,7 +340,7 @@ private fun StepIndicator(currentStep: Int) {
     LinearProgressIndicator(
         progress = { (currentStep + 1) / 3f },
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(3.dp).clip(RoundedCornerShape(2.dp)),
-        color    = MaterialTheme.colorScheme.primary,
+        color    = glass.accent,
         trackColor = MaterialTheme.colorScheme.surfaceVariant
     )
     Spacer(Modifier.height(8.dp))
@@ -338,6 +350,7 @@ private fun StepIndicator(currentStep: Int) {
 @Composable
 private fun PhotoStep(imagePath: String?, onCaptureClick: () -> Unit) {
     val lang = LocalAppLanguage.current
+    val glass = SahyadriTheme.glassColors
     Column(
         modifier            = Modifier
             .fillMaxWidth()
@@ -357,13 +370,15 @@ private fun PhotoStep(imagePath: String?, onCaptureClick: () -> Unit) {
             modifier  = Modifier.fillMaxWidth().height(220.dp),
             shape     = RoundedCornerShape(20.dp),
             onClick   = onCaptureClick,
+            colors    = CardDefaults.cardColors(containerColor = glass.glassSurfaceStrong),
+            border    = BorderStroke(1.dp, glass.glassBorder),
             elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 if (imagePath != null) {
                     Image(
                         painter          = rememberAsyncImagePainter(File(imagePath)),
-                        contentDescription = "Captured water",
+                        contentDescription = appStr(lang, "rep_photo_captured"),
                         modifier         = Modifier.fillMaxSize(),
                         contentScale     = ContentScale.Crop
                     )
@@ -379,11 +394,11 @@ private fun PhotoStep(imagePath: String?, onCaptureClick: () -> Unit) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.CameraAlt, null,
                             modifier = Modifier.size(56.dp),
-                            tint     = MaterialTheme.colorScheme.primary)
+                            tint     = glass.accent)
                         Spacer(Modifier.height(12.dp))
                         Text(appStr(lang, "rep_tap_cam"),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary)
+                            color = glass.accent)
                     }
                 }
             }
@@ -391,7 +406,11 @@ private fun PhotoStep(imagePath: String?, onCaptureClick: () -> Unit) {
 
         if (imagePath != null) {
             Spacer(Modifier.height(12.dp))
-            OutlinedButton(onClick = onCaptureClick, shape = RoundedCornerShape(14.dp)) {
+            OutlinedButton(
+                onClick = onCaptureClick,
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, glass.accent.copy(alpha = 0.5f))
+            ) {
                 Icon(Icons.Default.CameraAlt, null, Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(appStr(lang, "rep_retake"))
@@ -413,6 +432,16 @@ private fun DetailsStep(
     val lang      = LocalAppLanguage.current
     val haptic    = LocalHapticFeedback.current
     var lastInt   by remember { mutableIntStateOf(clarity) }
+
+    val smellOptions = listOf(
+        "Normal" to appStr(lang, "rep_normal"),
+        "Bad" to appStr(lang, "rep_bad")
+    )
+    val flowOptions = listOf(
+        "Low" to appStr(lang, "rep_low"),
+        "Medium" to appStr(lang, "rep_medium"),
+        "High" to appStr(lang, "rep_high")
+    )
 
     Column(
         modifier = Modifier
@@ -464,16 +493,16 @@ private fun DetailsStep(
             Text(appStr(lang, "rep_smell"), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                listOf("Normal", "Bad").forEach { option ->
+                smellOptions.forEach { (value, label) ->
                     FilterChip(
-                        selected = smell == option,
+                        selected = smell == value,
                         onClick  = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onSmellChange(option)
+                            onSmellChange(value)
                         },
-                        label    = { Text(option) },
+                        label    = { Text(label) },
                         shape    = RoundedCornerShape(50),
-                        leadingIcon = if (smell == option) ({
+                        leadingIcon = if (smell == value) ({
                             Icon(Icons.Default.Check, null, Modifier.size(14.dp))
                         }) else null
                     )
@@ -489,15 +518,15 @@ private fun DetailsStep(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("Low", "Medium", "High").forEach { option ->
+                flowOptions.forEach { (value, label) ->
                     FilterChip(
-                        selected  = flow == option,
+                        selected  = flow == value,
                         onClick   = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onFlowChange(option)
+                            onFlowChange(value)
                         },
                         label     = {
-                            Text(option, modifier = Modifier.fillMaxWidth(),
+                            Text(label, modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center)
                         },
                         shape     = RoundedCornerShape(50),
@@ -523,6 +552,7 @@ private fun LocationStep(
 ) {
     val lang   = LocalAppLanguage.current
     val haptic = LocalHapticFeedback.current
+    val glass  = SahyadriTheme.glassColors
 
     val permLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -551,10 +581,9 @@ private fun LocationStep(
             modifier  = Modifier.fillMaxWidth(),
             shape     = RoundedCornerShape(20.dp),
             colors    = CardDefaults.cardColors(
-                containerColor = if (latitude != 0.0)
-                    CleanBlue.copy(alpha = 0.08f)
-                else MaterialTheme.colorScheme.surfaceVariant
-            )
+                containerColor = if (latitude != 0.0) glass.glassSurfaceStrong else glass.glassSurface
+            ),
+            border    = BorderStroke(1.dp, glass.glassBorder)
         ) {
             Row(
                 modifier          = Modifier.padding(16.dp),
@@ -562,7 +591,7 @@ private fun LocationStep(
             ) {
                 Icon(
                     Icons.Default.LocationOn, null,
-                    tint     = if (latitude != 0.0) CleanBlue
+                    tint     = if (latitude != 0.0) glass.accent
                                else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(28.dp)
                 )
@@ -570,8 +599,8 @@ private fun LocationStep(
                 Column(modifier = Modifier.weight(1f)) {
                     if (latitude != 0.0) {
                         Text(appStr(lang, "rep_loc_cap"),
-                            fontWeight = FontWeight.Bold, color = CleanBlue)
-                        Text("Lat: ${"%.6f".format(latitude)}\nLon: ${"%.6f".format(longitude)}",
+                            fontWeight = FontWeight.Bold, color = glass.accent)
+                        Text("${appStr(lang, "rep_lat")}: ${"%.6f".format(latitude)}\n${appStr(lang, "rep_lon")}: ${"%.6f".format(longitude)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
@@ -604,7 +633,7 @@ private fun LocationStep(
         ) {
             Icon(Icons.Default.LocationOn, null, Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
-            Text(if (latitude != 0.0) "Refresh Location" else "Get My Location")
+            Text(if (latitude != 0.0) appStr(lang, "rep_refresh_loc") else appStr(lang, "rep_get_loc"))
         }
     }
 }
@@ -634,6 +663,7 @@ private fun StepNavigationButtons(
     onSubmit:     () -> Unit
 ) {
     val lang = LocalAppLanguage.current
+    val glass = SahyadriTheme.glassColors
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -645,7 +675,8 @@ private fun StepNavigationButtons(
             OutlinedButton(
                 onClick   = onBack,
                 shape     = RoundedCornerShape(16.dp),
-                modifier  = Modifier.weight(1f)
+                modifier  = Modifier.weight(1f),
+                border    = BorderStroke(1.dp, glass.accent.copy(alpha = 0.5f))
             ) { Text(appStr(lang, "rep_back")) }
         }
 
@@ -653,14 +684,17 @@ private fun StepNavigationButtons(
             onClick   = if (currentStep < 2) onNext else onSubmit,
             enabled   = canProceed && !isSubmitting,
             shape     = RoundedCornerShape(16.dp),
-            modifier  = Modifier.weight(if (currentStep > 0) 1f else 1f).height(52.dp),
-            colors    = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            modifier  = Modifier
+                .weight(if (currentStep > 0) 1f else 1f)
+                .height(52.dp)
+                .background(Brush.verticalGradient(glass.oceanGradient), RoundedCornerShape(16.dp)),
+            colors    = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
         ) {
             if (isSubmitting) {
                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
             } else {
                 Text(
-                    if (currentStep < 2) "Continue" else "Submit Report",
+                    if (currentStep < 2) appStr(lang, "rep_continue") else appStr(lang, "rep_submit"),
                     fontWeight = FontWeight.SemiBold, fontSize = 16.sp
                 )
             }
@@ -671,6 +705,7 @@ private fun StepNavigationButtons(
 // â”€â”€â”€ Camera View â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @Composable
 fun CameraView(onImageCaptured: (String) -> Unit, onClose: () -> Unit) {
+    val lang = LocalAppLanguage.current
     val context        = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val controller     = remember {
@@ -683,7 +718,7 @@ fun CameraView(onImageCaptured: (String) -> Unit, onClose: () -> Unit) {
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (!granted) {
-            Toast.makeText(context, "Camera permission required", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, appStr(lang, "rep_camera_permission"), Toast.LENGTH_SHORT).show()
             onClose()
         }
     }
@@ -711,7 +746,7 @@ fun CameraView(onImageCaptured: (String) -> Unit, onClose: () -> Unit) {
             modifier = Modifier.statusBarsPadding().padding(16.dp).align(Alignment.TopStart)
                 .background(Color.Black.copy(0.4f), CircleShape)
         ) {
-            Icon(Icons.Default.Close, "Close", tint = Color.White)
+            Icon(Icons.Default.Close, appStr(lang, "close"), tint = Color.White)
         }
 
         // Shutter button
