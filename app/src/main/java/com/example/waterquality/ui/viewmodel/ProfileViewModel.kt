@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
+enum class ThemeMode { LIGHT, DARK, SYSTEM }
+
 data class ProfileStats(
     val username: String  = "Sahyadri User",
     val joinedDays: Int   = 14,
@@ -24,14 +26,15 @@ class ProfileViewModel @Inject constructor(
 
     private val prefs = application.getSharedPreferences("sahyadri_prefs", Context.MODE_PRIVATE)
 
-    // ── Dark mode ─────────────────────────────────────────────────────────────
-    private val _isDarkMode = MutableStateFlow(prefs.getBoolean("dark_mode", false))
-    val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
+    // ── Theme mode ─────────────────────────────────────────────────────────────
+    private val _themeMode = MutableStateFlow(
+        ThemeMode.valueOf(prefs.getString("theme_mode", ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name)
+    )
+    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
-    fun toggleDarkMode() {
-        val newValue = !_isDarkMode.value
-        _isDarkMode.value = newValue
-        prefs.edit().putBoolean("dark_mode", newValue).apply()
+    fun setThemeMode(mode: ThemeMode) {
+        _themeMode.value = mode
+        prefs.edit().putString("theme_mode", mode.name).apply()
     }
 
     // ── Notifications ─────────────────────────────────────────────────────────

@@ -37,11 +37,17 @@ import com.example.waterquality.ui.viewmodel.ProfileViewModel
 fun ProfileScreen(viewModel: ProfileViewModel) {
     val lang         = LocalAppLanguage.current
     val glass        = SahyadriTheme.glassColors
-    val isDark       by viewModel.isDarkMode.collectAsStateWithLifecycle()
+    val themeMode    by viewModel.themeMode.collectAsStateWithLifecycle()
     val notifEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val language     by viewModel.selectedLanguage.collectAsStateWithLifecycle()
     val stats        by viewModel.profileStats.collectAsStateWithLifecycle()
     val haptic       = LocalHapticFeedback.current
+
+    val themeOptions = listOf(
+        com.example.waterquality.ui.viewmodel.ThemeMode.LIGHT to appStr(lang, "pro_light"),
+        com.example.waterquality.ui.viewmodel.ThemeMode.DARK to appStr(lang, "pro_dark"),
+        com.example.waterquality.ui.viewmodel.ThemeMode.SYSTEM to "System"
+    )
 
     val languageOptions = listOf(
         "English" to appStr(lang, "lang_english"),
@@ -119,16 +125,52 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
 
         // â”€â”€ Preferences â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         SectionCard(title = appStr(lang, "pro_preferences")) {
-            // Dark mode
-            SettingsSwitchRow(
-                icon    = if (isDark) Icons.Default.DarkMode else Icons.Default.LightMode,
-                label   = if (isDark) appStr(lang, "pro_dark") else appStr(lang, "pro_light"),
-                checked = isDark,
-                onToggle = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    viewModel.toggleDarkMode()
+            // Theme Mode chips
+            Row(
+                modifier          = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.DarkMode, null,
+                    tint     = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp))
+                Spacer(Modifier.width(14.dp))
+                Text("Theme",
+                    style    = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    themeOptions.forEach { (value, label) ->
+                        val selected = themeMode == value
+                        val bgColor by animateColorAsState(
+                            targetValue   = if (selected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.surfaceVariant,
+                            animationSpec = spring(),
+                            label         = "theme_color"
+                        )
+                        val textColor by animateColorAsState(
+                            targetValue   = if (selected) Color.White
+                                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            animationSpec = spring(),
+                            label         = "theme_text"
+                        )
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                viewModel.setThemeMode(value)
+                            },
+                            colors         = ButtonDefaults.buttonColors(containerColor = bgColor),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                            shape          = RoundedCornerShape(10.dp),
+                            elevation      = ButtonDefaults.buttonElevation(0.dp)
+                        ) {
+                            Text(label, color = textColor,
+                                style      = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
+                        }
+                    }
                 }
-            )
+            }
 
             HorizontalDivider(modifier = Modifier.padding(horizontal = 4.dp))
 

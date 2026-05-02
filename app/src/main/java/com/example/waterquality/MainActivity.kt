@@ -38,8 +38,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val isDark    by profileViewModel.isDarkMode.collectAsStateWithLifecycle()
+            val themeMode by profileViewModel.themeMode.collectAsStateWithLifecycle()
             val language  by profileViewModel.selectedLanguage.collectAsStateWithLifecycle()
+            
+            val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
+            val isDark = when (themeMode) {
+                com.example.waterquality.ui.viewmodel.ThemeMode.LIGHT -> false
+                com.example.waterquality.ui.viewmodel.ThemeMode.DARK -> true
+                com.example.waterquality.ui.viewmodel.ThemeMode.SYSTEM -> isSystemDark
+            }
 
             WaterQualityTheme(darkTheme = isDark) {
                 CompositionLocalProvider(LocalAppLanguage provides language) {
