@@ -244,11 +244,15 @@ fun HomeScreen(
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
-                                .background(glass.glassSurface)
+                                .background(Color.White)
                                 .border(1.dp, glass.accent.copy(alpha = 0.5f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Person, contentDescription = null, tint = glass.accent)
+                            androidx.compose.foundation.Image(
+                                painter = androidx.compose.ui.res.painterResource(id = com.example.waterquality.R.drawable.logo),
+                                contentDescription = "Logo",
+                                modifier = Modifier.size(40.dp)
+                            )
                         }
                     }
 

@@ -1,4 +1,4 @@
-﻿package com.example.waterquality.ui.screens
+package com.example.waterquality.ui.screens
 
 import com.example.waterquality.ui.utils.LocalAppLanguage
 import com.example.waterquality.ui.utils.advisoryStatusLabel
@@ -286,8 +286,22 @@ private fun AdvisoryFlashCard(
 
                 // Content
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val titleParts = advisory.title.split("|")
+                    val titleStr = if (titleParts.size > 1) {
+                        String.format(appStr(lang, titleParts[0]), *titleParts.drop(1).toTypedArray())
+                    } else {
+                        appStr(lang, titleParts[0])
+                    }
+
+                    val descParts = advisory.description.split("|")
+                    val descStr = if (descParts.size > 1) {
+                        String.format(appStr(lang, descParts[0]), *descParts.drop(1).toTypedArray())
+                    } else {
+                        appStr(lang, descParts[0])
+                    }
+
                     Text(
-                        text       = advisory.title,
+                        text       = titleStr,
                         style      = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         textAlign  = TextAlign.Center,
@@ -295,7 +309,7 @@ private fun AdvisoryFlashCard(
                     )
                     Spacer(Modifier.height(14.dp))
                     Text(
-                        text      = advisory.description,
+                        text      = descStr,
                         style     = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         color     = Color.White.copy(alpha = 0.8f),

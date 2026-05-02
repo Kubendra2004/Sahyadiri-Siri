@@ -122,8 +122,8 @@ class WaterViewModel @Inject constructor(
             listOf(
                 Advisory(
                     id          = "welcome",
-                    title       = "Welcome to Sahyadri-Siri",
-                    description = "Start by submitting a water report near you to see AI-generated advisories here.",
+                    title       = "adv_welcome_title",
+                    description = "adv_welcome_desc",
                     status      = "Info",
                     timestamp   = System.currentTimeMillis()
                 )
@@ -137,17 +137,16 @@ class WaterViewModel @Inject constructor(
                     WaterQuality.POLLUTED -> "Critical"
                 }
                 val title = when (quality) {
-                    WaterQuality.CLEAN    -> "Water Source: Good Condition"
-                    WaterQuality.MODERATE -> "Water Source: Monitor Closely"
-                    WaterQuality.POLLUTED -> "Alert: Possible Contamination"
+                    WaterQuality.CLEAN    -> "adv_title_clean"
+                    WaterQuality.MODERATE -> "adv_title_mod"
+                    WaterQuality.POLLUTED -> "adv_title_pol"
                 }
                 val desc = when (quality) {
-                    WaterQuality.CLEAN    ->
-                        "Clarity ${r.clarity}/5 with normal odour. Safe for non-potable use. Continue monitoring."
+                    WaterQuality.CLEAN    -> "adv_desc_clean|${r.clarity}"
                     WaterQuality.MODERATE ->
-                        "Clarity ${r.clarity}/5. ${if (r.smell == "Bad") "Slight odour detected." else "Low clarity."} Avoid drinking without treatment."
+                        if (r.smell == "Bad") "adv_desc_mod_bad|${r.clarity}" else "adv_desc_mod_low|${r.clarity}"
                     WaterQuality.POLLUTED ->
-                        "Low clarity (${r.clarity}/5) and ${if (r.smell == "Bad") "strong odour" else "abnormal readings"} detected. Avoid all contact. Report to local authorities."
+                        if (r.smell == "Bad") "adv_desc_pol_bad|${r.clarity}" else "adv_desc_pol_abn|${r.clarity}"
                 }
                 Advisory(r.id, title, desc, status, r.timestamp)
             }
@@ -162,14 +161,9 @@ class WaterViewModel @Inject constructor(
                 val quality = waterQualityFromReport(r.clarity, r.smell)
                 AlertItem(
                     id          = r.id,
-                    title       = if (quality == WaterQuality.POLLUTED)
-                        "Pollution Alert" else "Water Quality Warning",
-                    message     = if (quality == WaterQuality.POLLUTED)
-                        "Sudden contamination detected. Clarity ${r.clarity}/5, ${r.smell} odour. Avoid all contact for 48 hours."
-                        else
-                        "Reduced water clarity (${r.clarity}/5) in this area. ${r.flow} flow rate observed.",
-                    severity    = if (quality == WaterQuality.POLLUTED)
-                        AlertSeverity.CRITICAL else AlertSeverity.WARNING,
+                    title       = if (quality == WaterQuality.POLLUTED) "alt_pol_title" else "alt_warn_title",
+                    message     = if (quality == WaterQuality.POLLUTED) "alt_pol_desc|${r.clarity}|${r.smell}" else "alt_warn_desc|${r.clarity}|${r.flow}",
+                    severity    = if (quality == WaterQuality.POLLUTED) AlertSeverity.CRITICAL else AlertSeverity.WARNING,
                     timestamp   = r.timestamp,
                     locationTag = "%.4f, %.4f".format(r.latitude, r.longitude)
                 )
@@ -187,24 +181,24 @@ class WaterViewModel @Inject constructor(
     private fun seedAlerts() = listOf(
         AlertItem(
             id       = "seed1",
-            title    = "Cauvery River — Warning",
-            message  = "Increased turbidity reported near Mysuru reach. Boil water before use.",
+            title    = "seed_c_title",
+            message  = "seed_c_desc",
             severity = AlertSeverity.WARNING,
             timestamp = System.currentTimeMillis() - 3_600_000L,
             locationTag = "12.2958, 76.6394"
         ),
         AlertItem(
             id       = "seed2",
-            title    = "Tungabhadra — Critical",
-            message  = "Industrial discharge suspected upstream. Avoid water contact. Authorities notified.",
+            title    = "seed_t_title",
+            message  = "seed_t_desc",
             severity = AlertSeverity.CRITICAL,
             timestamp = System.currentTimeMillis() - 7_200_000L,
             locationTag = "15.1394, 76.9214"
         ),
         AlertItem(
             id       = "seed3",
-            title    = "Kabini Reservoir — Info",
-            message  = "Water level slightly below seasonal average. Quality normal.",
+            title    = "seed_k_title",
+            message  = "seed_k_desc",
             severity = AlertSeverity.INFO,
             timestamp = System.currentTimeMillis() - 86_400_000L,
             locationTag = "11.9891, 76.3610"

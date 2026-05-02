@@ -262,8 +262,15 @@ private fun AlertCard(alert: AlertItem) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment     = Alignment.CenterVertically
                 ) {
+                    val titleParts = alert.title.split("|")
+                    val titleStr = if (titleParts.size > 1) {
+                        String.format(appStr(lang, titleParts[0]), *titleParts.drop(1).toTypedArray())
+                    } else {
+                        appStr(lang, titleParts[0])
+                    }
+
                     Text(
-                        text       = alert.title,
+                        text       = titleStr,
                         style      = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color      = accentColor,
@@ -273,8 +280,16 @@ private fun AlertCard(alert: AlertItem) {
                 }
 
                 Spacer(Modifier.height(4.dp))
+                
+                val msgParts = alert.message.split("|")
+                val msgStr = if (msgParts.size > 1) {
+                    String.format(appStr(lang, msgParts[0]), *msgParts.drop(1).toTypedArray())
+                } else {
+                    appStr(lang, msgParts[0])
+                }
+
                 Text(
-                    text  = alert.message,
+                    text  = msgStr,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )

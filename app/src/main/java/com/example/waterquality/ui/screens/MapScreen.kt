@@ -95,6 +95,7 @@ private enum class MapFilter { ALL, CLEAN, MODERATE, POLLUTED }
 fun rememberMapViewWithLifecycle(): MapView {
     val context        = LocalContext.current
     val lifecycle      = LocalLifecycleOwner.current.lifecycle
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
     val mapView        = remember {
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
@@ -102,10 +103,18 @@ fun rememberMapViewWithLifecycle(): MapView {
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             controller.setZoom(10.0)
             controller.setCenter(GeoPoint(12.9716, 77.5946))
+            if (isDark) {
+                overlayManager.tilesOverlay.setColorFilter(android.graphics.ColorMatrixColorFilter(floatArrayOf(
+                    -1f,  0f,  0f, 0f, 255f, // red
+                     0f, -1f,  0f, 0f, 255f, // green
+                     0f,  0f, -1f, 0f, 255f, // blue
+                     0f,  0f,  0f, 1f,   0f  // alpha
+                )))
+            }
         }
     }
 
-    DisposableEffect(lifecycle) {
+    DisposableEffect(lifecycle, isDark) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME  -> mapView.onResume()

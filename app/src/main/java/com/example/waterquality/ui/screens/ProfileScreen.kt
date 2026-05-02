@@ -1,4 +1,4 @@
-﻿package com.example.waterquality.ui.screens
+package com.example.waterquality.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.spring
@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -66,13 +67,17 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                 // Avatar
                 Box(
                     modifier = Modifier
-                        .size(78.dp)
-                        .background(Color.White.copy(0.2f), CircleShape),
+                        .size(100.dp)
+                        .background(Color.White, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Person, null,
-                        tint     = Color.White,
-                        modifier = Modifier.size(44.dp))
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.example.waterquality.R.drawable.logo),
+                        contentDescription = "Logo",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                    )
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(stats.username,

@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class AppScreen { SPLASH, MAIN, REPORT }
+private enum class AppScreen { SPLASH, LOGIN, MAIN, REPORT }
 
 @Composable
 private fun AppRoot(profileViewModel: ProfileViewModel) {
@@ -63,7 +63,20 @@ private fun AppRoot(profileViewModel: ProfileViewModel) {
         exit    = fadeOut(tween(400)) + scaleOut(targetScale = 0.95f, animationSpec = tween(400)),
         modifier = Modifier.fillMaxSize()
     ) {
-        SplashScreen(onNavigateToHome = { screen = AppScreen.MAIN })
+        SplashScreen(onNavigateToHome = { screen = AppScreen.LOGIN })
+    }
+
+    // Login
+    AnimatedVisibility(
+        visible = screen == AppScreen.LOGIN,
+        enter   = fadeIn(tween(350)),
+        exit    = fadeOut(tween(300)) + scaleOut(targetScale = 0.95f),
+        modifier = Modifier.fillMaxSize()
+    ) {
+        com.example.waterquality.ui.screens.LoginScreen(
+            onLoginSuccess = { screen = AppScreen.MAIN },
+            onGuestLogin = { screen = AppScreen.MAIN }
+        )
     }
 
     // Main shell
