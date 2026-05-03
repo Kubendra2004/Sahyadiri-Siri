@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -30,6 +31,7 @@ import com.example.waterquality.ui.theme.SahyadriTheme
 import com.example.waterquality.ui.utils.LocalAppLanguage
 import com.example.waterquality.ui.utils.appStr
 import com.example.waterquality.ui.viewmodel.ProfileViewModel
+import com.example.waterquality.ui.viewmodel.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,15 +44,17 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
     val stats by viewModel.profileStats.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
 
+    // Theme options with localized labels
     val themeOptions = listOf(
-        com.example.waterquality.ui.viewmodel.ThemeMode.LIGHT to appStr(lang, "pro_light"),
-        com.example.waterquality.ui.viewmodel.ThemeMode.DARK to appStr(lang, "pro_dark"),
-        com.example.waterquality.ui.viewmodel.ThemeMode.SYSTEM to "System"
+        ThemeMode.LIGHT  to appStr(lang, "pro_light"),
+        ThemeMode.DARK   to appStr(lang, "pro_dark"),
+        ThemeMode.SYSTEM to (if (lang == "ಕನ್ನಡ") "ಸಿಸ್ಟಮ್" else "System")
     )
 
+    // Language options — key + display label
     val languageOptions = listOf(
         "English" to appStr(lang, "lang_english"),
-        "ಕನ್ನಡ" to appStr(lang, "lang_kannada")
+        "ಕನ್ನಡ"   to appStr(lang, "lang_kannada")
     )
 
     Column(
@@ -58,7 +62,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Massive Hero Header Redesign
+        // Hero Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -67,7 +71,7 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                 .padding(bottom = 32.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(
@@ -82,28 +86,28 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                         color = Color.White
                     )
                     IconButton(
-                        onClick = { /* Settings */ },
+                        onClick = { },
                         colors = IconButtonDefaults.iconButtonColors(containerColor = Color.White.copy(alpha = 0.2f))
                     ) {
                         Icon(Icons.Default.Settings, null, tint = Color.White)
                     }
                 }
-                
-                Spacer(Modifier.height(32.dp))
-                
+
+                Spacer(Modifier.height(24.dp))
+
                 Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Profile Logo",
                     modifier = Modifier
-                        .size(100.dp)
+                        .size(96.dp)
                         .clip(CircleShape)
                         .background(Color.White)
                         .padding(8.dp),
                     contentScale = ContentScale.Fit
                 )
-                
-                Spacer(Modifier.height(16.dp))
-                
+
+                Spacer(Modifier.height(12.dp))
+
                 Text(
                     text = stats.username,
                     style = MaterialTheme.typography.titleLarge,
@@ -111,58 +115,67 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                     color = Color.White
                 )
                 Text(
-                    text = "Joined ${stats.joinedDays} days ago",
+                    text = "${appStr(lang, "pro_member_for")} ${stats.joinedDays} ${appStr(lang, "pro_days")}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.8f)
                 )
             }
         }
 
-        // Modern Dashboard Grid
+        // Dashboard Grid
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(24.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.weight(1f)
         ) {
-            // Stats Row
+            // Stats
             item {
-                StatCard(icon = Icons.Default.WaterDrop, value = "${stats.totalSubmitted}", label = "Reports", glass)
+                StatCard(
+                    icon = Icons.Default.WaterDrop,
+                    value = "${stats.totalSubmitted}",
+                    label = appStr(lang, "pro_reports"),
+                    glass = glass
+                )
             }
             item {
-                StatCard(icon = Icons.Default.EmojiEvents, value = "${stats.badgeCount}", label = "Badges", glass)
+                StatCard(
+                    icon = Icons.Default.EmojiEvents,
+                    value = "${stats.badgeCount}",
+                    label = appStr(lang, "pro_badges"),
+                    glass = glass
+                )
             }
 
-            // Theme Preferences (Full Width)
+            // Theme Section (full width)
             item(span = { GridItemSpan(2) }) {
                 GlassCard {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(glass.accent.copy(alpha = 0.1f)),
+                                .background(glass.accent.copy(alpha = 0.15f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(Icons.Default.Palette, null, tint = glass.accent)
                         }
-                        Spacer(Modifier.width(16.dp))
+                        Spacer(Modifier.width(12.dp))
                         Text(
-                            "Theme Preference",
+                            if (lang == "ಕನ್ನಡ") "ಥೀಮ್ ಆಯ್ಕೆ" else "Theme",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     }
-                    
-                    Spacer(Modifier.height(16.dp))
-                    
-                    // Fixed horizontal wrapping using SingleChoiceSegmentedButtonRow
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+
+                    Spacer(Modifier.height(14.dp))
+
+                    // Segmented button row — fills full width, text uses labelSmall to fit
+                    SingleChoiceSegmentedButtonRow(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         themeOptions.forEachIndexed { index, (value, label) ->
                             SegmentedButton(
                                 selected = themeMode == value,
@@ -170,72 +183,94 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     viewModel.setThemeMode(value)
                                 },
-                                shape = SegmentedButtonDefaults.itemShape(index = index, count = themeOptions.size)
+                                shape = SegmentedButtonDefaults.itemShape(index = index, count = themeOptions.size),
+                                icon = { }   // suppress checkmark icon to save space
                             ) {
-                                Text(label, style = MaterialTheme.typography.labelSmall)
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
                             }
                         }
                     }
                 }
             }
 
-            // Language & Notifications (Full Width)
+            // Language Section (full width) — button-style, not dropdown
             item(span = { GridItemSpan(2) }) {
                 GlassCard {
-                    Text(
-                        "App Settings",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    
-                    // Language
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(glass.accent.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Language, null, tint = glass.accent)
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            appStr(lang, "pro_language"),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+
+                    Spacer(Modifier.height(14.dp))
+
+                    // Two-button row for language selection
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Language, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Spacer(Modifier.width(16.dp))
-                            Text(appStr(lang, "pro_lang"), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
-                        }
-                        
-                        var expanded by remember { mutableStateOf(false) }
-                        Box {
-                            FilterChip(
-                                selected = true,
-                                onClick = { expanded = true },
-                                label = { Text(language) },
-                                trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }
-                            )
-                            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                                languageOptions.forEach { (langKey, label) ->
-                                    DropdownMenuItem(
-                                        text = { Text(label) },
-                                        onClick = {
-                                            viewModel.setLanguage(langKey)
-                                            expanded = false
-                                        }
-                                    )
-                                }
+                        languageOptions.forEach { (langKey, label) ->
+                            val isSelected = language == langKey
+                            Button(
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    viewModel.setLanguage(langKey)
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isSelected) glass.accent else MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                elevation = ButtonDefaults.buttonElevation(
+                                    defaultElevation = if (isSelected) 4.dp else 0.dp
+                                )
+                            ) {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
                             }
                         }
                     }
-                    
-                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
-                    
-                    // Notifications
+                }
+            }
+
+            // Notifications (full width)
+            item(span = { GridItemSpan(2) }) {
+                GlassCard {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.NotificationsActive, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Spacer(Modifier.width(16.dp))
-                            Text(appStr(lang, "pro_notif"), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
+                            Icon(Icons.Default.NotificationsActive, null, tint = glass.accent)
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                appStr(lang, "pro_notif"),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                         }
                         Switch(
                             checked = notifEnabled,
@@ -252,10 +287,15 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
 }
 
 @Composable
-private fun StatCard(icon: ImageVector, value: String, label: String, glass: com.example.waterquality.ui.theme.GlassColors) {
+private fun StatCard(
+    icon: ImageVector,
+    value: String,
+    label: String,
+    glass: com.example.waterquality.ui.theme.GlassColors
+) {
     GlassCard(contentPadding = PaddingValues(16.dp)) {
         Icon(icon, null, tint = glass.accent, modifier = Modifier.size(28.dp))
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(10.dp))
         Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onBackground)
         Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }

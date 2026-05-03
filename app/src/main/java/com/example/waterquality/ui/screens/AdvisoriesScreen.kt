@@ -9,6 +9,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.TipsAndUpdates
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WaterDrop
@@ -32,6 +33,7 @@ import com.example.waterquality.ui.theme.CleanBlue
 import com.example.waterquality.ui.theme.ModerateAmber
 import com.example.waterquality.ui.theme.PollutedRed
 import com.example.waterquality.ui.utils.LocalAppLanguage
+import com.example.waterquality.ui.utils.appStr
 import com.example.waterquality.ui.viewmodel.AdvisoriesViewModel
 import com.example.waterquality.ui.viewmodel.AdvisoryItem
 import com.example.waterquality.ui.viewmodel.AlertSeverity
@@ -45,13 +47,18 @@ fun AdvisoriesScreen(
     val lang = LocalAppLanguage.current
     val glass = SahyadriTheme.glassColors
     val advisories by viewModel.advisories.collectAsStateWithLifecycle()
-    val pagerState = rememberPagerState(pageCount = { advisories.size })
+
+    // Push current language into the ViewModel every time it changes
+    LaunchedEffect(lang) { viewModel.setLanguage(lang) }
+
+    val pagerState = rememberPagerState(pageCount = { advisories.size.coerceAtLeast(1) })
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.linearGradient(glass.oceanGradient))
     ) {
+        // Pager content
         if (advisories.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = Color.White)
@@ -60,11 +67,9 @@ fun AdvisoriesScreen(
             VerticalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 80.dp) // Leave space for bottom nav
+                contentPadding = PaddingValues(top = 100.dp, bottom = 80.dp)
             ) { page ->
                 val advisory = advisories[page]
-                
-                // 3D Parallax Effect
                 val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
                 val alphaAnim = 1f - (pageOffset.absoluteValue * 0.5f).coerceIn(0f, 1f)
                 val scaleAnim = 1f - (pageOffset.absoluteValue * 0.15f).coerceIn(0f, 1f)
@@ -72,55 +77,82 @@ fun AdvisoriesScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp)
+                        .padding(horizontal = 24.dp, vertical = 8.dp)
                         .graphicsLayer {
                             alpha = alphaAnim
                             scaleX = scaleAnim
                             scaleY = scaleAnim
-                            translationY = pageOffset * 200f
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    AdvisoryCard(advisory = advisory, glass = glass)
+                    AdvisoryCard(advisory = advisory, lang = lang, glass = glass)
                 }
             }
         }
-        
-        // Header overlaid on top
+
+        // Floating header with notch clearance
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(24.dp),
+                .padding(top = 8.dp, start = 24.dp, end = 24.dp, bottom = 16.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.TipsAndUpdates, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
-            Spacer(Modifier.width(12.dp))
-            Text("AI Advisories", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color.White)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(Color.Black.copy(alpha = 0.3f))
+                    .padding(horizontal = 20.dp, vertical = 10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.TipsAndUpdates, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = appStr(lang, "adv_title"),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+
+        // Swipe hint at bottom
+        if (advisories.size > 1) {
+            Text(
+                text = appStr(lang, "adv_subtitle"),
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 90.dp)
+            )
         }
     }
 }
 
 @Composable
-fun AdvisoryCard(advisory: AdvisoryItem, glass: com.example.waterquality.ui.theme.GlassColors) {
-    val icon = when (advisory.severity) {
-        AlertSeverity.INFO -> Icons.Default.WaterDrop
-        AlertSeverity.WARNING -> Icons.Default.Warning
-        AlertSeverity.CRITICAL -> Icons.Default.Warning
-    }
-    
-    val color = when (advisory.severity) {
-        AlertSeverity.INFO -> CleanBlue
-        AlertSeverity.WARNING -> ModerateAmber
-        AlertSeverity.CRITICAL -> PollutedRed
+fun AdvisoryCard(
+    advisory: AdvisoryItem,
+    lang: String,
+    glass: com.example.waterquality.ui.theme.GlassColors
+) {
+    val (icon, color) = when (advisory.severity) {
+        AlertSeverity.INFO     -> Icons.Default.CheckCircle to CleanBlue
+        AlertSeverity.WARNING  -> Icons.Default.Warning     to ModerateAmber
+        AlertSeverity.CRITICAL -> Icons.Default.Warning     to PollutedRed
     }
 
-    GlassCard(
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    val actionLabel = when (advisory.severity) {
+        AlertSeverity.INFO     -> appStr(lang, "adv_status_safe")
+        AlertSeverity.WARNING  -> appStr(lang, "adv_status_caution")
+        AlertSeverity.CRITICAL -> appStr(lang, "adv_status_critical")
+    }
+
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
@@ -132,15 +164,15 @@ fun AdvisoryCard(advisory: AdvisoryItem, glass: com.example.waterquality.ui.them
             ) {
                 Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(40.dp))
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = advisory.title,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = advisory.description,
                 style = MaterialTheme.typography.bodyLarge,
@@ -148,16 +180,14 @@ fun AdvisoryCard(advisory: AdvisoryItem, glass: com.example.waterquality.ui.them
                 textAlign = TextAlign.Center,
                 lineHeight = 24.sp
             )
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Action Button
+            Spacer(modifier = Modifier.height(24.dp))
             Button(
-                onClick = { /* Action */ },
+                onClick = { },
                 colors = ButtonDefaults.buttonColors(containerColor = color),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth().height(56.dp)
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp)
             ) {
-                Text("Take Action", fontWeight = FontWeight.Bold, color = Color.White)
+                Text(actionLabel, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }

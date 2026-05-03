@@ -43,18 +43,21 @@ fun AlertsScreen(
     val alerts by viewModel.filteredAlerts.collectAsStateWithLifecycle()
     val activeFilter by viewModel.activeFilter.collectAsStateWithLifecycle()
 
+    // Push current language into the ViewModel so seed/dynamic content re-localizes
+    LaunchedEffect(lang) { viewModel.setLanguage(lang) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Redesigned Header
+        // Redesigned Header with notch clearance
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(glass.glassSurfaceStrong)
                 .statusBarsPadding()
-                .padding(24.dp)
+                .padding(horizontal = 24.dp, vertical = 20.dp)
         ) {
             Column {
                 Text(
@@ -64,7 +67,7 @@ fun AlertsScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    "Real-time ecological reports",
+                    appStr(lang, "al_hint"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

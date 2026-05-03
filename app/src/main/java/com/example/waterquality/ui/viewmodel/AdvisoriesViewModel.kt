@@ -5,11 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.waterquality.data.repository.WaterRepository
 import com.example.waterquality.ui.components.WaterQuality
 import com.example.waterquality.ui.components.waterQualityFromReport
+import com.example.waterquality.ui.utils.appStr
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 data class AdvisoryItem(
@@ -24,38 +28,59 @@ class AdvisoriesViewModel @Inject constructor(
     private val repository: WaterRepository
 ) : ViewModel() {
 
-    val advisories: StateFlow<List<AdvisoryItem>> = repository.allReports
+    // Language exposed so the composable can push the current language into the VM
+    private val _lang = MutableStateFlow("English")
+    fun setLanguage(lang: String) = _lang.update { lang }
+
+    private val _baseAdvisories = repository.allReports
         .map { reports ->
-            val list = reports
-                .filter { waterQualityFromReport(it.clarity, it.smell) != WaterQuality.CLEAN }
+            reports.filter { waterQualityFromReport(it.clarity, it.smell) != WaterQuality.CLEAN }
                 .map { r ->
                     val q = waterQualityFromReport(r.clarity, r.smell)
-                    AdvisoryItem(
-                        id = r.id,
-                        title = if (q == WaterQuality.POLLUTED) "Critical Pollution Advisory" else "Cautionary Advisory",
-                        description = if (q == WaterQuality.POLLUTED) 
-                            "Gemini AI detects severe contamination patterns in recent reports. Avoid all contact with the water source and notify local authorities."
-                        else 
-                            "Gemini AI notes reduced water clarity. Safe for secondary usage, but avoid consumption. Monitor the situation closely.",
-                        severity = if (q == WaterQuality.POLLUTED) AlertSeverity.CRITICAL else AlertSeverity.WARNING
-                    )
+                    // Return raw key references; language resolved in combine below
+                    Triple(r.id, q, r.clarity)
                 }
-            if (list.isEmpty()) seedAdvisories() else list
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), seedAdvisories())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    private fun seedAdvisories() = listOf(
+    val advisories: StateFlow<List<AdvisoryItem>> =
+        combine(_baseAdvisories, _lang) { rawList, lang ->
+            val resolved = rawList.map { (id, q, clarity) ->
+                AdvisoryItem(
+                    id = id,
+                    title = if (q == WaterQuality.POLLUTED)
+                        appStr(lang, "adv_title_pol")
+                    else
+                        appStr(lang, "adv_title_mod"),
+                    description = if (q == WaterQuality.POLLUTED)
+                        String.format(appStr(lang, "adv_desc_pol_abn"), clarity)
+                    else
+                        String.format(appStr(lang, "adv_desc_mod_low"), clarity),
+                    severity = if (q == WaterQuality.POLLUTED) AlertSeverity.CRITICAL else AlertSeverity.WARNING
+                )
+            }
+            if (resolved.isEmpty()) seedAdvisories(lang) else resolved
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), seedAdvisories("English"))
+
+    private fun seedAdvisories(lang: String) = listOf(
         AdvisoryItem(
-            id = "adv1",
-            title = "Seasonal Algal Bloom",
-            description = "Gemini AI predicts a high probability of algal blooms due to rising temperatures. Avoid swimming in stagnant areas.",
+            id = "adv_seed_c",
+            title = appStr(lang, "adv_title_clean"),
+            description = appStr(lang, "adv_welcome_desc"),
+            severity = AlertSeverity.INFO
+        ),
+        AdvisoryItem(
+            id = "adv_seed_w",
+            title = appStr(lang, "adv_title_mod"),
+            description = String.format(appStr(lang, "adv_desc_mod_bad"), "3"),
             severity = AlertSeverity.WARNING
         ),
         AdvisoryItem(
-            id = "adv2",
-            title = "Heavy Rainfall Runoff",
-            description = "Recent heavy rains have increased turbidity levels significantly. Water may appear muddy but is generally safe for non-potable use.",
-            severity = AlertSeverity.INFO
+            id = "adv_seed_p",
+            title = appStr(lang, "adv_title_pol"),
+            description = String.format(appStr(lang, "adv_desc_pol_bad"), "1", appStr(lang, "rep_bad")),
+            severity = AlertSeverity.CRITICAL
         )
     )
 }
