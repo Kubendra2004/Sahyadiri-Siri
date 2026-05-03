@@ -1,83 +1,88 @@
 <div align="center">
-  <img src="app/src/main/res/drawable/logo.png" width="200" alt="Sahyadri-Siri Logo"/>
-  <h1>Sahyadri-Siri 🌊</h1>
-  <p><b>AI-Powered Water Quality Monitoring Ecosystem</b></p>
-
-  [![Android Minimum SDK](https://img.shields.io/badge/Min%20SDK-24%20(Android%207.0)-blue.svg?style=for-the-badge&logo=android)](https://android.com)
-  [![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-Premium_UI-teal.svg?style=for-the-badge&logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
-  [![Backend](https://img.shields.io/badge/Backend-FastAPI-009688.svg?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
-  [![AI Engine](https://img.shields.io/badge/AI_Engine-Google_Gemini-4285F4.svg?style=for-the-badge&logo=google)](https://deepmind.google/technologies/gemini/)
+  <img src="./app/src/main/res/drawable/logo.png" alt="Sahyadri-Siri Logo" width="200"/>
+  <h1>🌊 Sahyadri-Siri</h1>
+  <p><strong>Next-Generation Water Quality Monitoring Ecosystem</strong></p>
+  
+  <p>
+    <a href="#-features">Features</a> •
+    <a href="#-tech-stack">Tech Stack</a> •
+    <a href="#-architecture">Architecture</a> •
+    <a href="#-getting-started">Getting Started</a>
+  </p>
 </div>
-
-<br/>
-
-## 🌟 Overview
-
-**Sahyadri-Siri** is a next-generation water quality monitoring application built to protect and analyze the water bodies of the Sahyadri (Western Ghats) region. Leveraging cutting-edge AI and a beautiful glassmorphism Android interface, it empowers citizens to report water conditions and provides authorities with real-time, AI-driven actionable insights.
 
 ---
 
-## ✨ Features
+## ✨ Overview
 
-### 💎 Premium Glassmorphism UI
-- **Backward-Compatible Aesthetics**: Stunning frosted glass interfaces, deep-ocean gradients, and micro-animations built with **Jetpack Compose**.
-- **Broad Compatibility**: Designed to run flawlessly on legacy devices (Android 7.0+) up to modern flagships (Android 14+), utilizing advanced backward-compatible gradient meshes.
-- **Dynamic Theming**: Seamless switching between Dark Mode, Light Mode, and System Default.
+**Sahyadri-Siri** is a premium, AI-driven Android application designed to crowdsource and monitor water quality across the Sahyadri region. It bridges the gap between community reporting and advanced machine learning to provide real-time, actionable insights into ecological health.
 
-### 🧠 Gemini AI Advisories
-- **Dynamic Flashcards**: View AI-generated water advisories in a 3D-tilt, swipeable carousel.
-- **Context-Aware Analytics**: The AI analyzes turbidity, pH (mocked), and clarity to generate localized warnings and safe usage guidelines.
+The platform employs a stunning **Glassmorphism-based UI** for maximum user engagement and utilizes **Google Gemini** to generate hyper-contextual environmental advisories based on incoming data streams.
 
-### 🌍 Deep Localization
-- **Instant Translation**: Fully localized in English and Kannada.
-- **Dynamic Data Binding**: The GenAI output translates seamlessly without requiring an app restart.
+---
 
-### 🗺️ Real-Time Alerts Map
-- **Dark-Mode OpenStreetMap**: Beautiful custom ColorMatrix filtering dynamically inverts map tiles to match the premium dark theme.
-- **Live Feed**: Staggered, animated alert feeds showing the most critical pollution reports instantly.
+## 🚀 Features
+
+- 📱 **Futuristic Dashboard**: A completely redesigned, high-fidelity grid dashboard that provides an immediate overview of regional Water Quality Index (WQI) scores.
+- 🤖 **AI-Powered Advisories**: An immersive "shorts-style" vertical pager integrating Google Gemini AI to deliver critical, actionable alerts and predictive environmental warnings.
+- 🗺️ **Live Geospatial Mapping**: Real-time visualization of clean, moderate, and polluted water sources across an interactive map.
+- 🎨 **Adaptive Premium Theming**: Seamless 3-way theme switching (Light / Dark / System) with frosted glass meshes ensuring pixel-perfect rendering across Android 7 through 11.
+- ⚡ **Real-time Timeline Alerts**: A modern, scrollable timeline tracking ecological reports, localized directly to the user's geographic proximity.
+- 🌍 **Bilingual Support**: Instantaneous switching between English and Kannada for broader regional accessibility.
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend (Android Native)
+- **Language**: Kotlin 1.9+
+- **UI Toolkit**: Jetpack Compose (Material 3)
+- **Architecture**: MVVM with Clean Architecture principles
+- **Asynchronous Processing**: Kotlin Coroutines & StateFlow
+- **Dependency Injection**: Dagger Hilt
+- **Local Storage**: Room Database & DataStore Preferences
+
+### Backend (Future Proofing)
+- **Framework**: FastAPI (Python 3.10+)
+- **Machine Learning**: Scikit-learn (Water Quality Index calculation models)
+- **GenAI**: Google Gemini Pro (Automated insight generation)
+- **Database**: PostgreSQL with PostGIS for spatial queries
 
 ---
 
 ## 🏗️ Architecture
 
-### 📱 Frontend (Android)
-- **Framework**: Kotlin & Jetpack Compose
-- **Architecture**: MVVM with StateFlow
-- **Dependency Injection**: Hilt
-- **UI System**: Custom "Glassmorphism" design system
+Sahyadri-Siri strictly follows a **Clean Architecture** paradigm combined with the **MVVM** pattern:
 
-### ⚙️ Backend & AI (FastAPI + Gemini)
-The backend leverages Python's **FastAPI** to handle high-throughput telemetry data from the Android client. 
-- **Endpoint Design**: RESTful APIs for submitting reports and fetching aggregated metrics.
-- **GenAI Integration**: Google's Gemini models process unstructured environmental text and numerical scores to generate human-readable advisories in real time.
-- **Database**: Extensible structure ready for PostgreSQL/PostGIS for spatial water data queries.
+1.  **UI Layer**: Jetpack Compose screens reacting to `StateFlow` updates.
+2.  **ViewModel Layer**: Manages UI state, handles user interactions, and interacts with repositories.
+3.  **Data Layer**: Repositories orchestrating data between local caches (Room) and the remote FastAPI endpoints.
 
 ---
 
-## 🚀 Getting Started
+## 🏁 Getting Started
 
 ### Prerequisites
-- Android Studio Iguana+
+- Android Studio Iguana | 2023.2.1 or newer
 - JDK 17
-- Python 3.10+ (for backend)
+- Minimum SDK: API 24 (Android 7.0 Nougat)
 
-### Building the Android App
+### Installation
 1. Clone the repository:
    ```bash
    git clone https://github.com/Kubendra2004/Sahyadiri-Siri.git
    ```
 2. Open the project in Android Studio.
-3. Sync Gradle (Ensure Java 17 is selected).
-4. Run `installDebug` or press the Play button to install on your emulator/device.
+3. Sync the Gradle files.
+4. Build and run on your Android emulator or physical device via USB debugging.
 
----
-
-## 📸 Screenshots (Coming Soon)
-
-*(Add your beautiful screenshots here of the Login, Home, Map, and Alerts screens!)*
+```bash
+# To install a debug APK directly via command line
+.\gradlew.bat installDebug
+```
 
 ---
 
 <div align="center">
-  <i>"AI for cleaner waters. Better tomorrow."</i>
+  <p>Built with ❤️ for the preservation of the Sahyadri Ecology.</p>
 </div>
