@@ -55,3 +55,7 @@ build_output.txt
 
 sahyadri-siri-72e70-826847d1a30e.json
 uploads/
+
+.agent/
+.idea/
+.vscode/
