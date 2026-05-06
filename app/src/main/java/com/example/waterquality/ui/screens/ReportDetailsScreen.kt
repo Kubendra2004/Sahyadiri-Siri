@@ -54,6 +54,7 @@ fun ReportDetailsScreen(
     // For now it shows a structured detail layout ready for data injection.
     val placeholder = WaterReport(
         id        = reportId,
+        userId    = "",
         clarity   = 4,
         smell     = "Normal",
         flow      = "Medium",

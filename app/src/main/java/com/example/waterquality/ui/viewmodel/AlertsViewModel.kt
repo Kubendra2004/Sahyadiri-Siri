@@ -3,8 +3,7 @@ package com.example.waterquality.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.waterquality.data.repository.WaterRepository
-import com.example.waterquality.ui.components.WaterQuality
-import com.example.waterquality.ui.components.waterQualityFromReport
+import com.example.waterquality.data.model.Advisory
 import com.example.waterquality.ui.utils.appStr
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,34 +28,9 @@ class AlertsViewModel @Inject constructor(
     /** IDs dismissed by the user in this session. */
     private val _dismissedIds = MutableStateFlow<Set<String>>(emptySet())
 
-    /** All alerts derived from Room reports, localized by _lang. */
-    private val rawAlerts = repository.allReports
-        .map { reports ->
-            reports
-                .filter { waterQualityFromReport(it.clarity, it.smell) != WaterQuality.CLEAN }
-                .map { r ->
-                    val q = waterQualityFromReport(r.clarity, r.smell)
-                    // Store raw data; localization resolved in combine
-                    Pair(r, q)
-                }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
     private val allAlerts =
-        combine(rawAlerts, _lang) { pairs, lang ->
-            val list = pairs.map { (r, q) ->
-                AlertItem(
-                    id          = r.id,
-                    title       = if (q == WaterQuality.POLLUTED) appStr(lang, "alt_pol_title") else appStr(lang, "alt_warn_title"),
-                    message     = if (q == WaterQuality.POLLUTED)
-                        String.format(appStr(lang, "alt_pol_desc"), r.clarity, appStr(lang, if (r.smell == "bad") "rep_bad" else "rep_normal"))
-                    else
-                        String.format(appStr(lang, "alt_warn_desc"), r.clarity, appStr(lang, when (r.flow.lowercase()) { "low" -> "rep_low"; "high" -> "rep_high"; else -> "rep_medium" })),
-                    severity    = if (q == WaterQuality.POLLUTED) AlertSeverity.CRITICAL else AlertSeverity.WARNING,
-                    timestamp   = r.timestamp,
-                    locationTag = "%.4f, %.4f".format(r.latitude, r.longitude)
-                )
-            }
+        combine(repository.getLocalAdvisories(), _lang) { advisories, lang ->
+            val list = advisories.map { advisory -> advisory.toAlertItem(lang) }
             if (list.isEmpty()) seedAlerts(lang) else list
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), seedAlerts("English"))
@@ -105,4 +79,20 @@ class AlertsViewModel @Inject constructor(
             locationTag = "11.9891, 76.3610"
         )
     )
+
+    private fun Advisory.toAlertItem(lang: String): AlertItem {
+        val severity = when (status) {
+            "Critical" -> AlertSeverity.CRITICAL
+            "Caution" -> AlertSeverity.WARNING
+            else -> AlertSeverity.INFO
+        }
+        return AlertItem(
+            id = id,
+            title = title.ifBlank { appStr(lang, "nav_alerts") },
+            message = description,
+            severity = severity,
+            timestamp = timestamp,
+            locationTag = reportId ?: appStr(lang, "location")
+        )
+    }
 }

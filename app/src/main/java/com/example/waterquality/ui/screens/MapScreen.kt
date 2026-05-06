@@ -155,7 +155,7 @@ fun MapScreen(
 ) {
     val lang = LocalAppLanguage.current
     val glass = SahyadriTheme.glassColors
-    val reports by viewModel.reports.collectAsStateWithLifecycle()
+    val reports by viewModel.mapReports.collectAsStateWithLifecycle()
     val context  = LocalContext.current
     val scope    = rememberCoroutineScope()
 

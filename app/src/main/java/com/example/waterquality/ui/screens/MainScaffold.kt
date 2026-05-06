@@ -5,13 +5,21 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -37,6 +45,8 @@ fun MainScaffold(
     val bottomBarVisible = BottomNavTab.values().any { it.route == currentRoute }
     val waterViewModel: WaterViewModel = hiltViewModel()
     val alertBadge by waterViewModel.alertBadgeCount.collectAsStateWithLifecycle()
+    val backendBaseUrl by waterViewModel.backendBaseUrl.collectAsStateWithLifecycle()
+    val isBackendReachable by waterViewModel.isBackendReachable.collectAsStateWithLifecycle()
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -68,30 +78,58 @@ fun MainScaffold(
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController    = navController,
-            startDestination = Routes.HOME,
-            modifier         = Modifier.fillMaxSize().padding(innerPadding)
-        ) {
-            composable(Routes.HOME) {
-                HomeScreen(
-                    onNavigateToReportDetails = { id -> navController.navigate(Routes.reportDetail(id)) },
-                    onNavigateToReport  = onNavigateToReport,
-                    onNavigateToMap        = { navController.navigate(Routes.MAP) { launchSingleTop = true } },
-                    onNavigateToAdvisories = { navController.navigate(Routes.ADVISORIES) { launchSingleTop = true } }
-                )
-            }
-            composable(Routes.MAP)         { MapScreen() }
-            composable(Routes.ADVISORIES)  { AdvisoriesScreen() }
-            composable(Routes.ALERTS)      { AlertsScreen() }
-            composable(Routes.PROFILE)     { ProfileScreen(viewModel = profileViewModel) }
-            composable(Routes.REPORT_DETAIL) { back ->
-                val reportId = back.arguments?.getString("reportId") ?: ""
-                ReportDetailsScreen(
-                    reportId       = reportId,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            BackendStatusBanner(
+                baseUrl = backendBaseUrl,
+                isConnected = isBackendReachable
+            )
+
+            NavHost(
+                navController    = navController,
+                startDestination = Routes.HOME,
+                modifier         = Modifier.fillMaxSize()
+            ) {
+                composable(Routes.HOME) {
+                    HomeScreen(
+                        onNavigateToReportDetails = { id -> navController.navigate(Routes.reportDetail(id)) },
+                        onNavigateToReport  = onNavigateToReport,
+                        onNavigateToMap        = { navController.navigate(Routes.MAP) { launchSingleTop = true } },
+                        onNavigateToAdvisories = { navController.navigate(Routes.ADVISORIES) { launchSingleTop = true } }
+                    )
+                }
+                composable(Routes.MAP)         { MapScreen() }
+                composable(Routes.ADVISORIES)  { AdvisoriesScreen() }
+                composable(Routes.ALERTS)      { AlertsScreen() }
+                composable(Routes.PROFILE)     { ProfileScreen(viewModel = profileViewModel) }
+                composable(Routes.REPORT_DETAIL) { back ->
+                    val reportId = back.arguments?.getString("reportId") ?: ""
+                    ReportDetailsScreen(
+                        reportId       = reportId,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun BackendStatusBanner(baseUrl: String, isConnected: Boolean) {
+    val background = if (isConnected) Color(0xFFDFF6E6) else Color(0xFFFFE3E3)
+    val textColor = if (isConnected) Color(0xFF0F6A33) else Color(0xFF8A1F1F)
+    val label = if (isConnected) "Backend connected" else "Backend unreachable"
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(background)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "$label: $baseUrl",
+            style = MaterialTheme.typography.labelMedium,
+            color = textColor
+        )
     }
 }

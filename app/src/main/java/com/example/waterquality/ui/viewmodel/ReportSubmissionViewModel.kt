@@ -7,17 +7,14 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.waterquality.data.model.WaterReport
 import com.example.waterquality.data.repository.WaterRepository
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 /** 3-step wizard: Photo(0) → Details(1) → Location(2) */
@@ -90,19 +87,21 @@ class ReportSubmissionViewModel @Inject constructor(
             _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
             try {
                 val s = _uiState.value
-                repository.submitReport(
-                    WaterReport(
-                        id        = UUID.randomUUID().toString(),
-                        clarity   = s.clarity,
-                        smell     = s.smell,
-                        flow      = s.flow,
-                        latitude  = s.latitude,
-                        longitude = s.longitude,
-                        imagePath = s.imagePath,
-                        timestamp = System.currentTimeMillis()
-                    )
+                val result = repository.submitReport(
+                    clarity        = s.clarity,
+                    smell          = s.smell,
+                    flow           = s.flow,
+                    latitude       = s.latitude,
+                    longitude      = s.longitude,
+                    localImagePath = s.imagePath
                 )
-                _uiState.update { it.copy(isSubmitting = false, submissionSuccess = true) }
+                if (result.isSuccess) {
+                    _uiState.update { it.copy(isSubmitting = false, submissionSuccess = true) }
+                } else {
+                    _uiState.update {
+                        it.copy(isSubmitting = false, errorMessage = "Submission failed. Saved offline.")
+                    }
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(isSubmitting = false, errorMessage = "Submission failed. Saved offline.")

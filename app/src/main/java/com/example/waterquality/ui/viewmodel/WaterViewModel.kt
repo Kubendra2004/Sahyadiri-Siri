@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.waterquality.data.model.Advisory
 import com.example.waterquality.data.model.WaterReport
+import com.example.waterquality.data.model.ReportWithUser
+import com.example.waterquality.data.remote.AuthenticationManager
+import com.example.waterquality.data.remote.BackendEndpointResolver
 import com.example.waterquality.data.repository.WaterRepository
 import com.example.waterquality.ui.components.WaterQuality
 import com.example.waterquality.ui.components.waterQualityFromReport
@@ -38,6 +41,8 @@ enum class AlertSeverity { CRITICAL, WARNING, INFO }
 @HiltViewModel
 class WaterViewModel @Inject constructor(
     private val repository: WaterRepository,
+    private val authenticationManager: AuthenticationManager,
+    private val backendEndpointResolver: BackendEndpointResolver,
     private val connectivityObserver: ConnectivityObserver,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -82,8 +87,21 @@ class WaterViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    private val _backendBaseUrl = MutableStateFlow("Resolving backend...")
+    val backendBaseUrl: StateFlow<String> = _backendBaseUrl.asStateFlow()
+
+    private val _isBackendReachable = MutableStateFlow(false)
+    val isBackendReachable: StateFlow<Boolean> = _isBackendReachable.asStateFlow()
+
+    private val _mapReports = MutableStateFlow<List<WaterReport>>(emptyList())
+    val mapReports: StateFlow<List<WaterReport>> = combine(reports, _mapReports) { localReports, remoteReports ->
+        remoteReports.ifEmpty { localReports }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     init {
         loadRegionName()
+        resolveBackendEndpoint()
+        syncRemoteData()
     }
 
     fun loadRegionName() {
@@ -96,8 +114,40 @@ class WaterViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             loadRegionName()
+            resolveBackendEndpoint()
+            syncRemoteData()
             kotlinx.coroutines.delay(800)
             _isLoading.value = false
+        }
+    }
+
+    private fun resolveBackendEndpoint() {
+        viewModelScope.launch {
+            val resolvedBaseUrl = backendEndpointResolver.resolveAndPersist()
+            _backendBaseUrl.value = resolvedBaseUrl
+            _isBackendReachable.value = backendEndpointResolver.isActiveHealthy()
+        }
+    }
+
+    private fun syncRemoteData() {
+        if (!authenticationManager.isLoggedIn()) {
+            return
+        }
+
+        viewModelScope.launch {
+            repository.refreshRemoteData()
+                .onFailure { _errorMessage.value = it.message ?: "Unable to sync remote data." }
+
+            repository.getMapData()
+                .onSuccess { remoteReports ->
+                    _mapReports.value = remoteReports.map { it.toWaterReport() }
+                }
+                .onFailure {
+                    _mapReports.value = emptyList()
+                    if (_errorMessage.value == null) {
+                        _errorMessage.value = it.message ?: "Unable to load map data."
+                    }
+                }
         }
     }
 
@@ -204,4 +254,23 @@ class WaterViewModel @Inject constructor(
             locationTag = "11.9891, 76.3610"
         )
     )
+
+    private fun ReportWithUser.toWaterReport(): WaterReport {
+        return WaterReport(
+            id = id,
+            userId = user.id,
+            clarity = clarity,
+            smell = smell,
+            flow = flow,
+            latitude = latitude,
+            longitude = longitude,
+            imagePath = imagePath,
+            timestamp = timestamp,
+            status = status,
+            wqiScore = wqiScore,
+            advisoryId = advisory?.id,
+            localImagePath = null,
+            syncTimestamp = System.currentTimeMillis()
+        )
+    }
 }

@@ -48,6 +48,7 @@ fun HomeScreen(
     val lang = LocalAppLanguage.current
     val glass = SahyadriTheme.glassColors
     val reports by viewModel.reports.collectAsStateWithLifecycle()
+    val headlineWqi = reports.firstOrNull()?.wqiScore?.toInt() ?: 82
 
     Column(
         modifier = Modifier
@@ -95,7 +96,7 @@ fun HomeScreen(
                 )
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        text = "82",
+                        text = headlineWqi.toString(),
                         style = MaterialTheme.typography.displayLarge,
                         fontWeight = FontWeight.Black,
                         color = Color.White,
@@ -233,7 +234,7 @@ fun RedesignedReportCard(report: WaterReport, lang: String, glass: GlassColors, 
         WaterQuality.POLLUTED -> appStr(lang, "status_polluted")
     }
 
-    val wqiScore = report.clarity * 20
+    val wqiScore = report.wqiScore.toInt()
     val locationName = "%.4f, %.4f".format(report.latitude, report.longitude)
 
     Card(

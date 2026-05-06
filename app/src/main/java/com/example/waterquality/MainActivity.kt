@@ -24,7 +24,9 @@ import com.example.waterquality.ui.screens.ReportSubmissionScreen
 import com.example.waterquality.ui.screens.SplashScreen
 import com.example.waterquality.ui.theme.WaterQualityTheme
 import com.example.waterquality.ui.utils.LocalAppLanguage
+import com.example.waterquality.ui.viewmodel.AppSessionViewModel
 import com.example.waterquality.ui.viewmodel.ProfileViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -62,6 +64,8 @@ private enum class AppScreen { SPLASH, LOGIN, MAIN, REPORT }
 @Composable
 private fun AppRoot(profileViewModel: ProfileViewModel) {
     var screen by remember { mutableStateOf(AppScreen.SPLASH) }
+    val appSessionViewModel: AppSessionViewModel = hiltViewModel()
+    val isLoggedIn by appSessionViewModel.isLoggedIn.collectAsStateWithLifecycle()
 
     // Splash
     AnimatedVisibility(
@@ -70,7 +74,11 @@ private fun AppRoot(profileViewModel: ProfileViewModel) {
         exit    = fadeOut(tween(400)) + scaleOut(targetScale = 0.95f, animationSpec = tween(400)),
         modifier = Modifier.fillMaxSize()
     ) {
-        SplashScreen(onNavigateToHome = { screen = AppScreen.LOGIN })
+        SplashScreen(
+            onNavigateToHome = {
+                screen = if (isLoggedIn) AppScreen.MAIN else AppScreen.LOGIN
+            }
+        )
     }
 
     // Login
@@ -81,8 +89,7 @@ private fun AppRoot(profileViewModel: ProfileViewModel) {
         modifier = Modifier.fillMaxSize()
     ) {
         com.example.waterquality.ui.screens.LoginScreen(
-            onLoginSuccess = { screen = AppScreen.MAIN },
-            onGuestLogin = { screen = AppScreen.MAIN }
+            onLoginSuccess = { screen = AppScreen.MAIN }
         )
     }
 

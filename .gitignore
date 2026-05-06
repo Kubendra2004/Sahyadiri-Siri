@@ -1,6 +1,12 @@
+# ─── Android / Gradle ─────────────────────────────────────────────────────────
 *.iml
 .gradle
-/local.properties
+/build
+/captures
+.externalNativeBuild
+.cxx
+
+# ─── IDE ───────────────────────────────────────────────────────────────────────
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
@@ -8,12 +14,44 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+
+# ─── Local config ─────────────────────────────────────────────────────────────
 local.properties
 
-# Secret keys — never commit these
+# ─── Secrets — NEVER commit ───────────────────────────────────────────────────
 .env
 *.env
+*.env.local
+firebase-credentials.json
+google-services.json
+keystore.jks
+*.keystore
+
+# ─── Python backend ───────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+dist/
+*.egg-info/
+.pytest_cache/
+*.pkl
+
+# ─── JVM crash logs ───────────────────────────────────────────────────────────
+hs_err_pid*.log
+replay_pid*.log
+
+# ─── Build & debug artefacts ──────────────────────────────────────────────────
+*.apk
+*.txt
+app_logs.txt
+logcat_dump.txt
+build_output.txt
+
+# ─── Markdown — only README.md is allowed ─────────────────────────────────────
+*.md
+!README.md
+
+sahyadri-siri-72e70-826847d1a30e.json
+uploads/

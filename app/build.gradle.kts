@@ -1,4 +1,6 @@
 
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,6 +8,37 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
     alias(libs.plugins.hilt)
 }
+
+val envProperties = Properties().apply {
+    val envFile = rootProject.file(".env")
+    if (envFile.exists()) {
+        envFile.inputStream().use { load(it) }
+    }
+}
+
+val frontendApiBaseUrl = (envProperties.getProperty("FRONTEND_API_BASE_URL") ?: "http://10.0.2.2:8000/api/")
+    .trim()
+    .let { if (it.endsWith("/")) it else "$it/" }
+
+val frontendApiBaseUrlRelease = (envProperties.getProperty("FRONTEND_API_BASE_URL_RELEASE") ?: frontendApiBaseUrl)
+    .trim()
+    .let { if (it.endsWith("/")) it else "$it/" }
+
+val googleWebClientId = (envProperties.getProperty("GOOGLE_WEB_CLIENT_ID") ?: "").trim()
+
+val frontendApiBaseUrlCandidates = (envProperties.getProperty("FRONTEND_API_BASE_URL_CANDIDATES")
+    ?: listOf(
+        frontendApiBaseUrl,
+        frontendApiBaseUrlRelease,
+        "http://10.0.2.2:8000/api/",
+        "http://127.0.0.1:8000/api/"
+    ).joinToString(","))
+    .split(",")
+    .map { it.trim() }
+    .filter { it.isNotBlank() }
+    .map { if (it.endsWith("/")) it else "$it/" }
+    .distinct()
+    .joinToString(",")
 
 android {
     namespace = "com.example.waterquality"
@@ -22,8 +55,18 @@ android {
     }
 
     buildTypes {
-        release {
+        debug {
             isMinifyEnabled = false
+            buildConfigField("String", "API_BASE_URL", "\"$frontendApiBaseUrl\"")
+            buildConfigField("String", "API_BASE_URL_CANDIDATES", "\"$frontendApiBaseUrlCandidates\"")
+            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
+        }
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            buildConfigField("String", "API_BASE_URL", "\"$frontendApiBaseUrlRelease\"")
+            buildConfigField("String", "API_BASE_URL_CANDIDATES", "\"$frontendApiBaseUrlCandidates\"")
+            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -57,6 +100,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -74,6 +119,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
+    implementation(libs.googleid)
     implementation(libs.play.services.location)
     implementation(libs.osmdroid)
     implementation(libs.retrofit)

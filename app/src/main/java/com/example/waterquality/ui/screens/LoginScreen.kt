@@ -1,10 +1,10 @@
 package com.example.waterquality.ui.screens
 
+import com.example.waterquality.BuildConfig
 import com.example.waterquality.R
+import com.example.waterquality.data.remote.GoogleSignInManager
 import com.example.waterquality.ui.theme.SahyadriTheme
 import com.example.waterquality.ui.theme.OceanBlue
-import com.example.waterquality.ui.theme.OceanBlueLight
-import com.example.waterquality.ui.theme.VibrantCyanDark
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,24 +25,29 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.waterquality.ui.viewmodel.LoginViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    onGuestLogin: () -> Unit
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val googleSignInManager = remember { GoogleSignInManager() }
 
     val glassColors = SahyadriTheme.glassColors
 
@@ -91,23 +96,47 @@ fun LoginScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Welcome Back",
+                        text = if (uiState.isRegisterMode) "Create Account" else "Welcome Back",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Sign in to monitor water quality",
+                        text = if (uiState.isRegisterMode) {
+                            "Register to sync reports and alerts"
+                        } else {
+                            "Sign in to monitor water quality"
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = glassColors.surfaceTint
                     )
 
                     Spacer(modifier = Modifier.height(32.dp))
 
+                    if (uiState.isRegisterMode) {
+                        OutlinedTextField(
+                            value = uiState.displayName,
+                            onValueChange = viewModel::onDisplayNameChange,
+                            label = { Text("Display Name", color = glassColors.surfaceTint) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = glassColors.accent,
+                                unfocusedBorderColor = glassColors.glassBorder,
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
                     OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
+                        value = uiState.email,
+                        onValueChange = viewModel::onEmailChange,
                         label = { Text("Email Address", color = glassColors.surfaceTint) },
                         leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -126,8 +155,8 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
+                        value = uiState.password,
+                        onValueChange = viewModel::onPasswordChange,
                         label = { Text("Password", color = glassColors.surfaceTint) },
                         leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground) },
                         trailingIcon = {
@@ -150,41 +179,80 @@ fun LoginScreen(
                         shape = RoundedCornerShape(12.dp)
                     )
 
+                    uiState.errorMessage?.let { message ->
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Button(
-                        onClick = {
-                            isLoading = true
-                        },
+                        onClick = { viewModel.submit(onLoginSuccess) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = OceanBlue),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        enabled = !uiState.isLoading
                     ) {
-                        if (isLoading) {
+                        if (uiState.isLoading) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                            LaunchedEffect(Unit) {
-                                delay(1000)
-                                isLoading = false
-                                onLoginSuccess()
-                            }
                         } else {
-                            Text("Sign In", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(
+                                if (uiState.isRegisterMode) "Create Account" else "Sign In",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Continue as Guest",
+                        text = if (uiState.isRegisterMode) "Already have an account? Sign in" else "Need an account? Register",
                         style = MaterialTheme.typography.labelLarge,
-                        color = glassColors.accent,
-                        fontWeight = FontWeight.Bold,
+                        color = glassColors.surfaceTint,
                         modifier = Modifier
-                            .clickable { onGuestLogin() }
+                            .clickable { viewModel.toggleMode() }
                             .padding(8.dp)
                     )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                val tokenResult = googleSignInManager.getGoogleIdToken(
+                                    context = context,
+                                    serverClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
+                                )
+                                tokenResult
+                                    .onSuccess { idToken ->
+                                        viewModel.submitGoogle(idToken, onLoginSuccess)
+                                    }
+                                    .onFailure { throwable ->
+                                        val message = throwable.message ?: "Google sign-in failed."
+                                        viewModel.setError(message)
+                                    }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        enabled = !uiState.isLoading
+                    ) {
+                        Text(
+                            text = "Sign up with Google",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         }
