@@ -23,9 +23,12 @@ local.properties
 *.env
 *.env.local
 firebase-credentials.json
+firebase-service-account.json
 google-services.json
 keystore.jks
 *.keystore
+seed_karnataka_data.py
+sensitive-findings.txt
 
 # ─── Python backend ───────────────────────────────────────────────────────────
 __pycache__/
@@ -37,6 +40,8 @@ dist/
 *.egg-info/
 .pytest_cache/
 *.pkl
+*.db
+*.sqlite3
 
 # ─── JVM crash logs ───────────────────────────────────────────────────────────
 hs_err_pid*.log
@@ -59,3 +64,4 @@ uploads/
 .agent/
 .idea/
 .vscode/
+backend/.env

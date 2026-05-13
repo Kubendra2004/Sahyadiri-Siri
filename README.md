@@ -41,6 +41,28 @@ The application enables users to report water conditions using simple observatio
 
 ---
 
+## ✅ Feature Summary (Frontend + Backend)
+
+### Frontend (Android)
+
+- Jetpack Compose UI with MVVM + Hilt architecture
+- Firebase Auth (Google + Anonymous) with real-time profile sync
+- Heatmap map view + WQI trend charts + community feed
+- Report submission with image upload + voice reporting
+- Offline caching with Room + background sync (WorkManager)
+- Push notifications (FCM) with deep links and critical alerts
+
+### Backend (FastAPI)
+
+- WQI computation + weather correlation endpoints
+- Gemini AI advisory generation with fallbacks
+- ML image analysis for turbidity scoring
+- Redis (Upstash) caching + rate limiting
+- Firebase Admin integration for storage + notifications
+- Health checks and structured API responses
+
+---
+
 # 🚀 Features
 
 ## 📱 Android Application
